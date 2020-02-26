@@ -50,6 +50,7 @@ import re
 import argparse
 import sys
 import os
+import pytz
 from datetime import datetime
 from humanize import naturalsize
 from collections import OrderedDict, deque
@@ -204,7 +205,7 @@ class OpenvpnMgmtInterface(object):
             else:
                 warning('No compatible geoip1 or geoip2 data/libraries found.')
         except IOError:
-            warning('No compatible geoip1 or geoip2 data/libraries found.')
+            warning('IOError! No compatible geoip1 or geoip2 data/libraries found.')
 
         for key, vpn in list(self.vpns.items()):
             self._socket_connect(vpn)
@@ -498,8 +499,8 @@ class OpenvpnHtmlPrinter(object):
         if 'maps' in settings and settings['maps'] == 'True':
             self.maps = True
 
-        self.latitude = 40.72
-        self.longitude = -74
+        self.latitude = 10.8
+        self.longitude = 106.6
         if 'latitude' in settings:
             self.latitude = settings['latitude']
         if 'longitude' in settings:
@@ -709,6 +710,7 @@ class OpenvpnHtmlPrinter(object):
         output('<td>{0!s} ({1!s})</td>'.format(auth_r, naturalsize(auth_r, binary=True)))
 
     def print_server_session(self, vpn_id, session, show_disconnect):
+        tz_NY = pytz.timezone('Asia/Ho_Chi_Minh')
         total_time = str(datetime.now() - session['connected_since'])[:-7]
         bytes_recv = session['bytes_recv']
         bytes_sent = session['bytes_sent']
@@ -818,8 +820,9 @@ class OpenvpnHtmlPrinter(object):
     def print_html_footer(self):
         output('<div class="well well-sm">')
         output('Page automatically reloads every 5 minutes.')
+        tz_NY = pytz.timezone('Asia/Ho_Chi_Minh')
         output('Last update: <b>{0!s}</b></div>'.format(
-            datetime.now().strftime(self.datetime_format)))
+            datetime.now(tz_NY).strftime(self.datetime_format)))
         output('</div></body></html>')
 
 

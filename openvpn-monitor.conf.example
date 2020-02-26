@@ -1,8 +1,8 @@
 [openvpn-monitor]
-site=Example
+site=
 #logo=logo.jpg
-#latitude=40.72
-#longitude=-74
+latitude=10.8
+longitude=106.6
 maps=True
 geoip_data=/usr/share/GeoIP/GeoLite2-City.mmdb
 datetime_format=%d/%m/%Y %H:%M:%S
