@@ -860,7 +860,7 @@ def monitor_wsgi():
         # virtualenv
         image_dir = owd + '/../../../share/openvpn-monitor/'
     else:
-        image_dir = request.environ['SCRIPT_NAME']
+        image_dir = ''
 
     app = Bottle()
 
