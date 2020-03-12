@@ -722,7 +722,7 @@ class OpenvpnHtmlPrinter(object):
             if session['location'] == 'RFC1918':
                 output('<td>RFC1918</td>')
             else:
-                flag = 'images/flags/{0!s}.png'.format(session['location'].lower())
+                flag = '{0!s}/images/flags/{1!s}.png'.format(request.environ['SCRIPT_NAME'], session['location'].lower())
                 if 'country' in session and session['country'] is not None:
                     country = session['country']
                     full_location = country
