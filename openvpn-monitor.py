@@ -133,6 +133,7 @@ class ConfigLoader(object):
         info('Using default settings => localhost:5555')
         self.settings = {'site': 'Default Site',
                          'maps': 'False',
+                         'maps_height': 500,
                          'location': 'True',
                          'geoip_data': '/usr/share/GeoIP/GeoIPCity.dat',
                          'datetime_format': '%d/%m/%Y %H:%M:%S'}
@@ -530,6 +531,7 @@ class OpenvpnHtmlPrinter(object):
         self.maps = is_truthy(settings.get('maps', False))
         if self.maps:
             self.maps_height = settings.get('maps_height', 500)
+        self.location = is_truthy(settings.get('location', False))
         self.latitude = settings.get('latitude', 40.72)
         self.longitude = settings.get('longitude', -74)
         self.datetime_format = settings.get('datetime_format')
