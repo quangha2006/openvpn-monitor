@@ -522,7 +522,7 @@ class OpenvpnHtmlPrinter(object):
                 self.print_unavailable_vpn(vpn)
         if self.maps:
             self.print_maps_html()
-            self.print_html_footer()
+        self.print_html_footer()
 
     def init_vars(self, settings, monitor):
         self.vpns = list(monitor.vpns.items())
