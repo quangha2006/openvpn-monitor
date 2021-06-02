@@ -28,9 +28,8 @@ except ImportError:
 
 try:
     from ipaddr import IPAddress as ip_address
-    from ipaddr import IPv6Address
 except ImportError:
-    from ipaddress import ip_address, IPv6Address
+    from ipaddress import ip_address
 
 try:
     import GeoIP as geoip1
@@ -45,11 +44,12 @@ try:
 except ImportError:
     geoip2_available = False
 
-import socket
-import re
 import argparse
-import sys
 import os
+import re
+import socket
+import string
+import sys
 import pytz
 from datetime import datetime
 from humanize import naturalsize
@@ -96,6 +96,10 @@ def get_str(s):
         return s
 
 
+def is_truthy(s):
+    return s in ['True', 'true', 'Yes', 'yes', True]
+
+
 class ConfigLoader(object):
 
     def __init__(self, config_file):
@@ -128,17 +132,18 @@ class ConfigLoader(object):
     def load_default_settings(self):
         info('Using default settings => localhost:5555')
         self.settings = {'site': 'Default Site',
-                         'maps': 'True',
+                         'maps': 'False',
                          'location': 'True',
                          'geoip_data': '/usr/share/GeoIP/GeoIPCity.dat',
                          'datetime_format': '%d/%m/%Y %H:%M:%S'}
         self.vpns['Default VPN'] = {'name': 'default',
                                     'host': 'localhost',
                                     'port': '5555',
+                                    'password': '',
                                     'show_disconnect': False}
 
     def parse_global_section(self, config):
-        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'location', 'geoip_data', 'datetime_format']
+        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'maps_height', 'location', 'geoip_data', 'datetime_format']
         for var in global_vars:
             try:
                 self.settings[var] = config.get('openvpn-monitor', var)
@@ -165,10 +170,7 @@ class ConfigLoader(object):
             except configparser.Error as e:
                 warning('CONFIG: {0!s} on option {1!s}: '.format(e, option))
                 vpn[option] = None
-        if 'show_disconnect' in vpn and vpn['show_disconnect'] == 'True':
-            vpn['show_disconnect'] = True
-        else:
-            vpn['show_disconnect'] = False
+        vpn['show_disconnect'] = is_truthy(vpn.get('show_disconnect', False))
         if args.debug:
             debug("=== begin section\n{0!s}\n=== end section".format(vpn))
 
@@ -178,7 +180,7 @@ class OpenvpnMgmtInterface(object):
     def __init__(self, cfg, **kwargs):
         self.vpns = cfg.vpns
 
-        if 'vpn_id' in kwargs:
+        if kwargs.get('vpn_id'):
             vpn = self.vpns[kwargs['vpn_id']]
             self._socket_connect(vpn)
             if vpn['socket_connected']:
@@ -186,7 +188,7 @@ class OpenvpnMgmtInterface(object):
                 version = semver(self.parse_version(release).split(' ')[1])
                 if version.major == 2 and \
                         version.minor >= 4 and \
-                        'port' not in kwargs:
+                        kwargs.get('client_id'):
                     command = 'client-kill {0!s}\n'.format(kwargs['client_id'])
                 else:
                     command = 'kill {0!s}:{1!s}\n'.format(kwargs['ip'], kwargs['port'])
@@ -208,7 +210,7 @@ class OpenvpnMgmtInterface(object):
         except IOError:
             warning('IOError! No compatible geoip1 or geoip2 data/libraries found.')
 
-        for key, vpn in list(self.vpns.items()):
+        for _, vpn in list(self.vpns.items()):
             self._socket_connect(vpn)
             if vpn['socket_connected']:
                 self.collect_data(vpn)
@@ -241,7 +243,7 @@ class OpenvpnMgmtInterface(object):
         timeout = 3
         self.s = False
         try:
-            if 'socket' in vpn:
+            if vpn.get('socket'):
                 self.s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 self.s.connect(vpn['socket'])
             else:
@@ -249,6 +251,9 @@ class OpenvpnMgmtInterface(object):
                 port = int(vpn['port'])
                 self.s = socket.create_connection((host, port), timeout)
             if self.s:
+                password = vpn.get('password')
+                if password:
+                    self.wait_for_data(password=password)
                 vpn['socket_connected'] = True
         except socket.timeout as e:
             vpn['error'] = '{0!s}'.format(e)
@@ -274,13 +279,23 @@ class OpenvpnMgmtInterface(object):
     def send_command(self, command):
         info('Sending command: {0!s}'.format(command))
         self._socket_send(command)
-        data = ''
         if command.startswith('kill') or command.startswith('client-kill'):
             return
+        return self.wait_for_data(command=command)
+
+    def wait_for_data(self, password=None, command=None):
+        data = ''
         while 1:
             socket_data = self._socket_recv(1024)
             socket_data = re.sub('>INFO(.)*\r\n', '', socket_data)
             data += socket_data
+            if data.endswith('ENTER PASSWORD:'):
+                if password:
+                    self._socket_send('{0!s}\n'.format(password))
+                else:
+                    warning('password requested but no password supplied by configuration')
+            if data.endswith('SUCCESS: password is correct\r\n'):
+                break
             if command == 'load-stats\n' and data != '':
                 break
             elif data.endswith("\nEND\r\n"):
@@ -391,17 +406,15 @@ class OpenvpnMgmtInterface(object):
                     remote = remote_str
                     port = None
                 remote_ip = ip_address(remote)
-                if isinstance(remote_ip, IPv6Address) and \
-                        remote_ip.ipv4_mapped is not None:
-                    session['remote_ip'] = remote_ip.ipv4_mapped
-                else:
-                    session['remote_ip'] = remote_ip
+                session['remote_ip'] = remote_ip
                 if port:
                     session['port'] = int(port)
                 else:
                     session['port'] = ''
                 if session['remote_ip'].is_private:
                     session['location'] = 'RFC1918'
+                elif session['remote_ip'].is_loopback:
+                    session['location'] = 'loopback'
                 else:
                     try:
                         if geoip_version == 1:
@@ -430,7 +443,7 @@ class OpenvpnMgmtInterface(object):
                     session['local_ip'] = ip_address(local_ipv4)
                 else:
                     session['local_ip'] = ''
-                if version.major == 2 and version.minor >= 4:
+                if version.major >= 2 and version.minor >= 4:
                     local_ipv6 = parts.popleft()
                     if local_ipv6:
                         session['local_ip'] = ip_address(local_ipv6)
@@ -450,9 +463,22 @@ class OpenvpnMgmtInterface(object):
 
             if routes_section:
                 local_ip = parts[1]
-                last_seen = parts[5]
-                if local_ip in sessions:
-                    sessions[local_ip]['last_seen'] = get_date(last_seen, uts=True)
+                remote_ip = parts[3]
+                last_seen = get_date(parts[5], uts=True)
+                if sessions.get(local_ip):
+                    sessions[local_ip]['last_seen'] = last_seen
+                elif self.is_mac_address(local_ip):
+                    matching_local_ips = [sessions[s]['local_ip']
+                                          for s in sessions if remote_ip ==
+                                          self.get_remote_address(sessions[s]['remote_ip'], sessions[s]['port'])]
+                    if len(matching_local_ips) == 1:
+                        local_ip = '{0!s}'.format(matching_local_ips[0])
+                        if sessions[local_ip].get('last_seen'):
+                            prev_last_seen = sessions[local_ip]['last_seen']
+                            if prev_last_seen < last_seen:
+                                sessions[local_ip]['last_seen'] = last_seen
+                        else:
+                            sessions[local_ip]['last_seen'] = last_seen
 
         if args.debug:
             if sessions:
@@ -468,6 +494,19 @@ class OpenvpnMgmtInterface(object):
         for line in data.splitlines():
             if line.startswith('OpenVPN'):
                 return line.replace('OpenVPN Version: ', '')
+
+    @staticmethod
+    def is_mac_address(s):
+        return len(s) == 17 and \
+            len(s.split(':')) == 6 and \
+            all(c in string.hexdigits for c in s.replace(':', ''))
+
+    @staticmethod
+    def get_remote_address(ip, port):
+        if port:
+            return '{0!s}:{1!s}'.format(ip, port)
+        else:
+            return '{0!s}'.format(ip)
 
 
 class OpenvpnHtmlPrinter(object):
@@ -485,33 +524,15 @@ class OpenvpnHtmlPrinter(object):
             self.print_html_footer()
 
     def init_vars(self, settings, monitor):
-
         self.vpns = list(monitor.vpns.items())
-
-        self.site = 'Example'
-        if 'site' in settings:
-            self.site = settings['site']
-
-        self.logo = None
-        if 'logo' in settings:
-            self.logo = settings['logo']
-
-        self.maps = False
-        if 'maps' in settings and settings['maps'] == 'True':
-            self.maps = True
-
-        self.location = False
-        if 'location' in settings and settings['location'] == 'True':
-            self.location = True
-
-        self.latitude = 10.8
-        self.longitude = 106.6
-        if 'latitude' in settings:
-            self.latitude = settings['latitude']
-        if 'longitude' in settings:
-            self.longitude = settings['longitude']
-
-        self.datetime_format = settings['datetime_format']
+        self.site = settings.get('site', 'Example')
+        self.logo = settings.get('logo')
+        self.maps = is_truthy(settings.get('maps', False))
+        if self.maps:
+            self.maps_height = settings.get('maps_height', 500)
+        self.latitude = settings.get('latitude', 40.72)
+        self.longitude = settings.get('longitude', -74)
+        self.datetime_format = settings.get('datetime_format')
 
     def print_html_header(self):
 
@@ -527,12 +548,12 @@ class OpenvpnHtmlPrinter(object):
         output('<meta http-equiv="refresh" content="300" />')
 
         # css
-        output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous" />')         # noqa
-        output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha256-ZT4HPpdCOt2lvDkXokHuhJfdOKSPFLzeAJik5U/Q+l4=" crossorigin="anonymous" />')   # noqa
-        output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.30.6/css/theme.bootstrap.min.css" integrity="sha256-dXZ9g5NdsPlD0182JqLz9UFael+Ug5AYo63RfujWPu8=" crossorigin="anonymous" />') # noqa
+        output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha512-Dop/vW3iOtayerlYAqCgkVr2aTr2ErwwTYOvRFUpzl2VhCMJyjQF0Q9TjUXIo6JhuM/3i0vVEt2e/7QQmnHQqw==" crossorigin="anonymous" />')  # noqa
+        output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha512-iy8EXLW01a00b26BaqJWaCmk9fJ4PsMdgNRqV96KwMPSH+blO82OHzisF/zQbRIIi8m0PiO10dpS0QxrcXsisw==" crossorigin="anonymous" />')  # noqa
+        output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/css/theme.bootstrap_3.min.css" integrity="sha512-1r2gsUynzocV5QbYgEwbcNGYQeQ4jgHUNZLl+PMr6o248376S3f9k8zmXvsKkU06wH0MrmQacKd0BjJ/kWeeng==" crossorigin="anonymous" />')  # noqa
         if self.location:
-            output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/leaflet.css" integrity="sha256-iYUgmrapfDGvBrePJPrMWQZDcObdAcStKBpjP3Az+3s=" crossorigin="anonymous" />')                       # noqa
-            output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.5/Control.FullScreen.css" integrity="sha256-RTALnHN76PJ32RJx2mxggy+RUt9TIRV+mfPLSLbI75A=" crossorigin="anonymous" />') # noqa
+            output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" integrity="sha512-1xoFisiGdy9nvho8EgXuXvnpR5GAMSjFwp40gSRE3NwdUdIMIKuPa7bqoUhLD0O/5tPNhteAsE5XyyMi5reQVA==" crossorigin="anonymous" />')  # noqa
+            output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.0.0/Control.FullScreen.min.css" integrity="sha512-DRkMa+fn898M1uc6s9JZeztUoXN6viuHsXmh/pgz3jG6a77YWO3U3QYEjLoqbxOeclc2NunWfMTya4Y5twXAKA==" crossorigin="anonymous" />')  # noqa
         output('<style>')
         output('.panel-custom {')
         output('   background-color:#777;')
@@ -546,18 +567,22 @@ class OpenvpnHtmlPrinter(object):
         output('</style>')
 
         # js
-        output('<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>')                                     # noqa
-        output('<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.30.6/js/jquery.tablesorter.min.js" integrity="sha256-OZsQ3HIaaZel0q2QrfcMuOXZf1i4QxE+7KLA5dJ/XVY=" crossorigin="anonymous"></script>')         # noqa
-        output('<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.30.6/js/jquery.tablesorter.widgets.min.js" integrity="sha256-+TgqgSpMfnq0gCirm/O2/SDZ3hODyRVTk/SCiRvFQ4A=" crossorigin="anonymous"></script>') # noqa
-        output('<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.30.6/js/parsers/parser-network.min.js" integrity="sha256-oQTnMXEL+HMou3Kn2ep3VPFg661GGqkB59Tpbo4kBMc=" crossorigin="anonymous"></script>')     # noqa
-        output('<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>')                    # noqa
+        output('<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>')  # noqa
+        output('<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js" integrity="sha512-qzgd5cYSZcosqpzpn7zF2ZId8f/8CHmFKZ8j7mU4OUXTNRd5g+ZHBPsgKEwoqxCtdQvExE5LprwwPAgoicguNg==" crossorigin="anonymous"></script>')  # noqa
+        output('<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.widgets.min.js" integrity="sha512-dj/9K5GRIEZu+Igm9tC16XPOTz0RdPk9FGxfZxShWf65JJNU2TjbElGjuOo3EhwAJRPhJxwEJ5b+/Ouo+VqZdQ==" crossorigin="anonymous"></script>')  # noqa
+        output('<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/parsers/parser-network.min.js" integrity="sha512-13ZRU2LDOsGjGgqBkQPKQ/JwT/SfWhtAeFNEbB0dFG/Uf/D1OJPbTpeK2AedbDnTLYWCB6VhTwLxlD0ws6EqCw==" crossorigin="anonymous"></script>')  # noqa
+        output('<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/parsers/parser-duration.min.js" integrity="sha512-X7QJLLEO6yg8gSlmgRAP7Ec2qDD+ndnFcd8yagZkkN5b/7bCMbhRQdyJ4SjENUEr+4eBzgwvaFH5yR/bLJZJQA==" crossorigin="anonymous"></script>')  # noqa
+        output('<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha512-oBTprMeNEKCnqfuqKd6sbvFzmFQtlXS3e0C/RGFV0hD6QzhHV+ODfaQbAlmY6/q0ubbwlAM/nCJjkrgA3waLzg==" crossorigin="anonymous"></script>')  # noqa
         output('<script>$(document).ready(function(){')
-        output('$("table.tablesorter").tablesorter({theme:"bootstrap", headerTemplate:"{content} {icon}", widgets:["uitheme"]});')
+        output('$("table.tablesorter").tablesorter({')
+        output('sortList: [[0,0]], theme:"bootstrap", headerTemplate:"{content} {icon}", widgets:["uitheme"],')
+        output('durationLabels : "(?:years|year|y),(?:days|day|d),(?:hours|hour|h),(?:minutes|minute|min|m),(?:seconds|second|sec|s)"')
+        output('});')
         output('});</script>')
         if self.location:
-            output('<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/leaflet.js" integrity="sha256-CNm+7c26DTTCGRQkM9vp7aP85kHFMqs9MhPEuytF+fQ=" crossorigin="anonymous"></script>')                             # noqa
-            output('<script src="//cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js" integrity="sha256-t+V41b9l6j8GMYAbpcnZbib1XiYwCAsDibD8sI1D7+Y=" crossorigin="anonymous"></script>') # noqa
-            output('<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.4.5/Control.FullScreen.min.js" integrity="sha256-ymsQ8vmYkMvP0tBKzewWBBnPnYm308ZoRQpeStgVR2Y=" crossorigin="anonymous"></script>')   # noqa
+            output('<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js" integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA==" crossorigin="anonymous"></script>')  # noqa
+            output('<script src="//cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js" integrity="sha512-V8RRDnS4BZXrat3GIpnWx+XNYBHQGdK6nKOzMpX4R0hz9SPWt7fltGmmyGzUkVFZUQODO1rE+SWYJJkw3SYMhg==" crossorigin="anonymous"></script>')  # noqa
+            output('<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.0.0/Control.FullScreen.min.js" integrity="sha512-c6ydt5Rypa1ptlnH2U1u+JybARYppbD1qxgythCI4pJ9EOfNYEWlLBjxBX926O3tq5p4Aw5GTY68vT0FdKbG3w==" crossorigin="anonymous"></script>')  # noqa
 
         output('</head><body>')
 
@@ -580,7 +605,7 @@ class OpenvpnHtmlPrinter(object):
         output('<span class="caret"></span></a>')
         output('<ul class="dropdown-menu">')
 
-        for key, vpn in self.vpns:
+        for _, vpn in self.vpns:
             if vpn['name']:
                 anchor = vpn['name'].lower().replace(' ', '_')
                 output('<li><a href="#{0!s}">{1!s}</a></li>'.format(anchor, vpn['name']))
@@ -621,7 +646,10 @@ class OpenvpnHtmlPrinter(object):
         output('tablesorter tablesorter-bootstrap">')
         output('<thead><tr>')
         for header in headers:
-            output('<th>{0!s}</th>'.format(header))
+            if header == 'Time Online':
+                output('<th class="sorter-duration">{0!s}</th>'.format(header))
+            else:
+                output('<th>{0!s}</th>'.format(header))
         output('</tr></thead><tbody>')
 
     @staticmethod
@@ -636,15 +664,15 @@ class OpenvpnHtmlPrinter(object):
         output('<h3 class="panel-title">{0!s}</h3></div>'.format(vpn['name']))
         output('<div class="panel-body">')
         output('Could not connect to ')
-        if 'host' in vpn and 'port' in vpn:
+        if vpn.get('host') and vpn.get('port'):
             output('{0!s}:{1!s} ({2!s})</div></div>'.format(vpn['host'],
                                                             vpn['port'],
                                                             vpn['error']))
-        elif 'socket' in vpn:
+        elif vpn.get('socket'):
             output('{0!s} ({1!s})</div></div>'.format(vpn['socket'],
                                                       vpn['error']))
         else:
-            warning('fail to get socket or network info: {}'.format(vpn))
+            warning('failed to get socket or network info: {}'.format(vpn))
             output('network or unix socket</div></div>')
 
     def print_vpn(self, vpn_id, vpn):
@@ -715,7 +743,6 @@ class OpenvpnHtmlPrinter(object):
         output('<td>{0!s} ({1!s})</td>'.format(auth_r, naturalsize(auth_r, binary=True)))
 
     def print_server_session(self, vpn_id, session, show_disconnect):
-        tz_NY = pytz.timezone('Asia/Ho_Chi_Minh')
         total_time = str(datetime.now() - session['connected_since'])[:-7]
         bytes_recv = session['bytes_recv']
         bytes_sent = session['bytes_sent']
@@ -723,22 +750,27 @@ class OpenvpnHtmlPrinter(object):
         output('<td>{0!s}</td>'.format(session['local_ip']))
         output('<td>{0!s}</td>'.format(session['remote_ip']))
 
-        if 'location' in session and session['location'] is not None:
-            if session['location'] == 'RFC1918':
-                output('<td>RFC1918</td>')
-            else:
-                flag = '/images/flags/{0!s}.png'.format(session['location'].lower())
-                if 'country' in session and session['country'] is not None:
-                    country = session['country']
-                    full_location = country
-                if 'region' in session and session['region'] is not None:
-                    region = session['region']
-                    full_location = '{0!s}, {1!s}'.format(region, full_location)
-                if 'city' in session and session['city'] is not None:
-                    city = session['city']
-                    full_location = '{0!s}, {1!s}'.format(city, full_location)
-                output('<td><img src="{0!s}" title="{1!s}" alt="{1!s}" /> '.format(flag, full_location))
-                output('{0!s}</td>'.format(full_location))
+        if session.get('location'):
+            flag = 'images/flags/{0!s}.png'.format(session['location'].lower())
+            if session.get('country'):
+                country = session['country']
+                full_location = country
+            if session.get('region'):
+                region = session['region']
+                full_location = '{0!s}, {1!s}'.format(region, full_location)
+            if session.get('city'):
+                city = session['city']
+                full_location = '{0!s}, {1!s}'.format(city, full_location)
+            if session['location'] in ['RFC1918', 'loopback']:
+                if session['location'] == 'RFC1918':
+                    city = 'RFC1918'
+                elif session['location'] == 'loopback':
+                    city = 'loopback'
+                country = 'Internet'
+                full_location = '{0!s}, {1!s}'.format(city, country)
+                flag = 'images/flags/rfc.png'
+            output('<td><img src="{0!s}" title="{1!s}" alt="{1!s}" /> '.format(flag, full_location))
+            output('{0!s}</td>'.format(full_location))
         else:
             output('<td>Unknown</td>')
 
@@ -746,40 +778,40 @@ class OpenvpnHtmlPrinter(object):
         output('<td>{0!s} ({1!s})</td>'.format(bytes_sent, naturalsize(bytes_sent, binary=True)))
         output('<td>{0!s}</td>'.format(
             session['connected_since'].strftime(self.datetime_format)))
-        if 'last_seen' in session:
+        if session.get('last_seen'):
             output('<td>{0!s}</td>'.format(
                 session['last_seen'].strftime(self.datetime_format)))
         else:
-            output('<td>ERROR</td>')
+            output('<td>Unknown</td>')
         output('<td>{0!s}</td>'.format(total_time))
         if show_disconnect:
             output('<td><form method="post">')
             output('<input type="hidden" name="vpn_id" value="{0!s}">'.format(vpn_id))
-            if 'port' in session:
+            if session.get('port'):
                 output('<input type="hidden" name="ip" value="{0!s}">'.format(session['remote_ip']))
                 output('<input type="hidden" name="port" value="{0!s}">'.format(session['port']))
-            if 'client_id' in session:
+            if session.get('client_id'):
                 output('<input type="hidden" name="client_id" value="{0!s}">'.format(session['client_id']))
             output('<button type="submit" class="btn btn-xs btn-danger">')
             output('<span class="glyphicon glyphicon-remove"></span> ')
             output('Disconnect</button></form></td>')
 
     def print_session_table(self, vpn_id, vpn_mode, sessions, show_disconnect):
-        for key, session in list(sessions.items()):
-            output('<tr>')
+        for _, session in list(sessions.items()):
             if vpn_mode == 'Client':
+                output('<tr>')
                 self.print_client_session(session)
-            elif vpn_mode == 'Server':
-                if not session['local_ip']:
-                    continue
+                output('</tr>')
+            elif vpn_mode == 'Server' and session['local_ip']:
+                output('<tr>')
                 self.print_server_session(vpn_id, session, show_disconnect)
-            output('</tr>')
+                output('</tr>')
 
     def print_maps_html(self):
         output('<div class="panel panel-info"><div class="panel-heading">')
         output('<h3 class="panel-title">Map View</h3></div><div class="panel-body">')
-        output('<div id="map_canvas" style="height:500px"></div>')
-        output('<script type="text/javascript">')
+        output('<div id="map_canvas" style="height:{0!s}px"></div>'.format(self.maps_height))
+        output('<script>')
         output('var map = L.map("map_canvas", { fullscreenControl: true, '
                'fullscreenControlOptions: { position: "topleft" }  });')
         output('var centre = L.latLng({0!s}, {1!s});'.format(self.latitude, self.longitude))
@@ -802,13 +834,13 @@ class OpenvpnHtmlPrinter(object):
         output('oms.addListener("spiderfy", function(markers) {')
         output('   map.closePopup();')
         output('});')
-        for vkey, vpn in self.vpns:
-            if 'sessions' in vpn:
+        for _, vpn in self.vpns:
+            if vpn.get('sessions'):
                 output('bounds.extend(centre);')
-                for skey, session in list(vpn['sessions'].items()):
-                    if 'local_ip' not in session or not session['local_ip']:
+                for _, session in list(vpn['sessions'].items()):
+                    if not session.get('local_ip'):
                         continue
-                    if 'longitude' in session and 'latitude' in session:
+                    if session.get('latitude') and session.get('longitude'):
                         output('var latlng = new L.latLng({0!s}, {1!s});'.format(
                             session['latitude'], session['longitude']))
                         output('bounds.extend(latlng);')
