@@ -3,10 +3,11 @@ site=
 #logo=logo.jpg
 latitude=10.8
 longitude=106.6
-maps=True
+maps=False
 maps_height=500
 location=True
-geoip_data=/usr/share/openvpn-monitor/GeoIP/GeoLite2-City.mmdb
+geoip_data=./GeoIP/GeoLite2-City.mmdb
+wakeonlan=True
 datetime_format=%d/%m/%Y %H:%M:%S
 
 [VPN1]
