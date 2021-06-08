@@ -136,6 +136,7 @@ class ConfigLoader(object):
                          'maps_height': 500,
                          'location': 'True',
                          'geoip_data': '/usr/share/GeoIP/GeoIPCity.dat',
+                         'wakeonlan': 'True',
                          'datetime_format': '%d/%m/%Y %H:%M:%S'}
         self.vpns['Default VPN'] = {'name': 'default',
                                     'host': 'localhost',
@@ -144,7 +145,7 @@ class ConfigLoader(object):
                                     'show_disconnect': False}
 
     def parse_global_section(self, config):
-        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'maps_height', 'location', 'geoip_data', 'datetime_format']
+        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'maps_height', 'location', 'geoip_data', 'wakeonlan', 'datetime_format']
         for var in global_vars:
             try:
                 self.settings[var] = config.get('openvpn-monitor', var)
@@ -520,6 +521,8 @@ class OpenvpnHtmlPrinter(object):
                 self.print_vpn(key, vpn)
             else:
                 self.print_unavailable_vpn(vpn)
+        if self.wakeonlan:
+            self.print_wake_on_lan()        
         if self.maps:
             self.print_maps_html()
         self.print_html_footer()
@@ -529,6 +532,7 @@ class OpenvpnHtmlPrinter(object):
         self.site = settings.get('site', 'Example')
         self.logo = settings.get('logo')
         self.maps = is_truthy(settings.get('maps', False))
+        self.wakeonlan = settings.get('wakeonlan')
         if self.maps:
             self.maps_height = settings.get('maps_height', 500)
         self.location = is_truthy(settings.get('location', False))
@@ -809,6 +813,54 @@ class OpenvpnHtmlPrinter(object):
                 self.print_server_session(vpn_id, session, show_disconnect)
                 output('</tr>')
 
+    def print_wake_on_lan(self):
+        pingable = 'Yes'
+        connection = 'connected'
+        nclients = 'nclients'
+        bytesin = 145872
+        bytesout = 145872
+        vpn_mode = 'Client'
+        vpn_sessions = 'sessions'
+        local_ip = 'local_ip'
+        remote_ip = 'remote_ip'
+        up_since = 'Wed Mar 23 21:43:25 2016'
+        show_disconnect = 'show_disconnect'
+
+        anchor = 'QuangHa'
+        output('<div class="panel panel-success" id="{0!s}">'.format(anchor))
+        output('<div class="panel-heading"><h3 class="panel-title">{0!s}</h3>'.format('Wake On Lan'))
+        output('</div><div class="panel-body">')
+        output('<div class="table-responsive">')
+        output('<table class="table table-condensed table-responsive">')
+        output('<thead><tr><th>User</th><th>Computer Name</th><th>IP Address</th>')
+        output('<th>MAC Address</th><th>Subnet Mask</th><th>Status</th>')
+        output('<th>Action</th><th>Check Status</th>')
+        if vpn_mode == 'Client':
+            output('<th>Remote IP Address</th>')
+        output('</tr></thead><tbody>')
+        output('<tr><td>{0!s}</td>'.format(vpn_mode))
+        output('<td>{0!s}</td>'.format(connection))
+        output('<td>{0!s}</td>'.format(pingable))
+        output('<td>{0!s}</td>'.format(nclients))
+        output('<td>{0!s} ({1!s})</td>'.format(bytesin, naturalsize(bytesin, binary=True)))
+        output('<td>{0!s} ({1!s})</td>'.format(bytesout, naturalsize(bytesout, binary=True)))
+        output('<td>{0!s}</td>'.format('Wed Mar 23 21:43:25 2016'))
+        output('<td>{0!s}</td>'.format(local_ip))
+        if vpn_mode == 'Client':
+            output('<td>{0!s}</td>'.format(remote_ip))
+        output('</tr></tbody></table></div>')
+
+        #if vpn_mode == 'Client' or nclients > 0:
+        #    self.print_session_table_headers(vpn_mode, show_disconnect)
+        #    self.print_session_table('vpn-id', vpn_mode, vpn_sessions, show_disconnect)
+        #    self.print_session_table_footer()
+
+        output('</div>')
+        output('<div class="panel-footer panel-custom">')
+        output('{0!s}'.format('vpn-release'))
+        output('</div>')
+        output('</div>')
+
     def print_maps_html(self):
         output('<div class="panel panel-info"><div class="panel-heading">')
         output('<h3 class="panel-title">Map View</h3></div><div class="panel-body">')
@@ -889,6 +941,7 @@ def get_args():
 if __name__ == '__main__':
     args = get_args()
     wsgi = False
+    #wsgi_output = ''
     main()
 
 
