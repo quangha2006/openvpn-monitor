@@ -3,6 +3,7 @@
 import sys
 import socket
 import select
+from typing import Tuple
 
 host = '127.0.0.1'
 port = 5555
@@ -60,19 +61,20 @@ while not received_exit:
             conn.close()
             break
         if readable:
-            data = conn.recv(1024)
+            data = conn.recv(1024).decode('utf-8')
+            print('recieved data: {0}'.format(data))
         if data.endswith(u'\n'):
             if data.startswith(u'status 3'):
-                conn.send(status)
+                conn.send(status.encode())
                 data = ''
             elif data.startswith(u'state'):
-                conn.send(state)
+                conn.send(state.encode())
                 data = ''
             elif data.startswith(u'version'):
-                conn.send(version)
+                conn.send(version.encode())
                 data = ''
             elif data.startswith(u'load-stats'):
-                conn.send(stats)
+                conn.send(stats.encode())
                 data = ''
             elif data.startswith(u'quit'):
                 print('[+] Closing connection from {0}'.format(address))
