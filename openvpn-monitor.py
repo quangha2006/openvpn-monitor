@@ -813,47 +813,56 @@ class OpenvpnHtmlPrinter(object):
                 self.print_server_session(vpn_id, session, show_disconnect)
                 output('</tr>')
 
-    def print_wake_on_lan(self):
-        pingable = 'Yes'
-        connection = 'connected'
-        nclients = 'nclients'
-        bytesin = 145872
-        bytesout = 145872
-        vpn_mode = 'Client'
-        vpn_sessions = 'sessions'
-        local_ip = 'local_ip'
-        remote_ip = 'remote_ip'
-        up_since = 'Wed Mar 23 21:43:25 2016'
-        show_disconnect = 'show_disconnect'
+    def print_wol_header(self):
+        computers_header = ['Username', 'Computer Name', 'IP Address', 'MAC Address', 'Subnet Mask', 'Status', 'Action', 'Check Status']
+        
+        output('<div class="table-responsive">')
+        output('<table id="sessions" class="table table-striped table-bordered ')
+        output('table-hover table-condensed table-responsive ')
+        output('tablesorter tablesorter-bootstrap">')
+        output('<thead><tr>')
+        for header in computers_header:
+            output('<th>{0!s}</th>'.format(header))
+        output('</tr></thead><tbody>')
 
+    def print_computer_list_table(self, computers):
+        output('<tr>')
+        output('<td>{0!s}</td>'.format('QuangHa'))
+        output('<td>{0!s}</td>'.format('QuangSkyVu'))
+        output('<td>{0!s}</td>'.format('192.168.0.10'))
+        output('<td>{0!s}</td>'.format('5C-80-B6-BA-01-2A'))
+        output('<td>{0!s}</td>'.format('255.255.255.0'))
+        output('<td>{0!s}</td>'.format('Online'))
+        #Wake button
+        output('<td><form method="post">')
+        output('<input type="hidden" name="action" value="{0!s}">'.format('ping'))
+        output('<input type="hidden" name="ip" value="{0!s}">'.format('192.168.1.100'))
+        output('<button type="submit" class="btn btn-xs btn-success">')
+        output('<span class="glyphicon glyphicon-off"></span> ')
+        output('Wake This PC</button></form></td>')
+        #ping button
+        output('<td><form method="post">')
+        output('<input type="hidden" name="action" value="{0!s}">'.format('ping'))
+        output('<input type="hidden" name="ip" value="{0!s}">'.format('192.168.1.100'))
+        output('<button type="submit" class="btn btn-xs btn-info">')
+        output('<span class="glyphicon glyphicon-send"></span> ')
+        output('Ping</button></form></td>')
+        output('</tr>')
+
+    def print_wake_on_lan(self):
         anchor = 'QuangHa'
         output('<div class="panel panel-success" id="{0!s}">'.format(anchor))
         output('<div class="panel-heading"><h3 class="panel-title">{0!s}</h3>'.format('Wake On Lan'))
         output('</div><div class="panel-body">')
-        output('<div class="table-responsive">')
-        output('<table class="table table-condensed table-responsive">')
-        output('<thead><tr><th>User</th><th>Computer Name</th><th>IP Address</th>')
-        output('<th>MAC Address</th><th>Subnet Mask</th><th>Status</th>')
-        output('<th>Action</th><th>Check Status</th>')
-        if vpn_mode == 'Client':
-            output('<th>Remote IP Address</th>')
-        output('</tr></thead><tbody>')
-        output('<tr><td>{0!s}</td>'.format(vpn_mode))
-        output('<td>{0!s}</td>'.format(connection))
-        output('<td>{0!s}</td>'.format(pingable))
-        output('<td>{0!s}</td>'.format(nclients))
-        output('<td>{0!s} ({1!s})</td>'.format(bytesin, naturalsize(bytesin, binary=True)))
-        output('<td>{0!s} ({1!s})</td>'.format(bytesout, naturalsize(bytesout, binary=True)))
-        output('<td>{0!s}</td>'.format('Wed Mar 23 21:43:25 2016'))
-        output('<td>{0!s}</td>'.format(local_ip))
-        if vpn_mode == 'Client':
-            output('<td>{0!s}</td>'.format(remote_ip))
-        output('</tr></tbody></table></div>')
 
         #if vpn_mode == 'Client' or nclients > 0:
-        #    self.print_session_table_headers(vpn_mode, show_disconnect)
-        #    self.print_session_table('vpn-id', vpn_mode, vpn_sessions, show_disconnect)
-        #    self.print_session_table_footer()
+        self.print_wol_header()
+        self.print_computer_list_table('vpn-id')
+        self.print_computer_list_table('vpn-id')
+        self.print_computer_list_table('vpn-id')
+        self.print_computer_list_table('vpn-id')
+        self.print_computer_list_table('vpn-id')
+        self.print_session_table_footer()
 
         output('</div>')
         output('<div class="panel-footer panel-custom">')
