@@ -8,6 +8,7 @@ maps_height=500
 location=True
 geoip_data=./GeoIP/GeoLite2-City.mmdb
 wakeonlan=True
+printlog=True
 datetime_format=%d/%m/%Y %H:%M:%S
 
 [VPN1]

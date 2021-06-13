@@ -71,16 +71,19 @@ def output(s):
 
 
 def info(*objs):
-    print("INFO:", *objs, file=sys.stderr)
-
+    global global_log
+    print("INFO: ", *objs, file=sys.stderr)
+    global_log += "\nINFO: " + ''.join(*objs)
 
 def warning(*objs):
-    print("WARNING:", *objs, file=sys.stderr)
-
+    global global_log
+    print("WARNING: ", *objs, file=sys.stderr)
+    global_log += "\nWARNING: " + ''.join(*objs)
 
 def debug(*objs):
-    print("DEBUG:\n", *objs, file=sys.stderr)
-
+    global global_log
+    print("DEBUG: ", *objs, file=sys.stderr)
+    global_log += "\nDEBUG: " + ''.join(*objs)
 
 def get_date(date_string, uts=False):
     if not uts:
@@ -137,6 +140,7 @@ class ConfigLoader(object):
                          'location': 'True',
                          'geoip_data': '/usr/share/GeoIP/GeoIPCity.dat',
                          'wakeonlan': 'True',
+                         'printlog': 'True',
                          'datetime_format': '%d/%m/%Y %H:%M:%S'}
         self.vpns['Default VPN'] = {'name': 'default',
                                     'host': 'localhost',
@@ -145,7 +149,7 @@ class ConfigLoader(object):
                                     'show_disconnect': False}
 
     def parse_global_section(self, config):
-        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'maps_height', 'location', 'geoip_data', 'wakeonlan', 'datetime_format']
+        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'maps_height', 'location', 'geoip_data', 'wakeonlan', 'printlog', 'datetime_format']
         for var in global_vars:
             try:
                 self.settings[var] = config.get('openvpn-monitor', var)
@@ -525,7 +529,9 @@ class OpenvpnHtmlPrinter(object):
             self.print_wake_on_lan()        
         if self.maps:
             self.print_maps_html()
-        self.print_html_footer()
+        if self.printlog:
+            self.print_python_log()
+        self.print_html_footer(vpn)
 
     def init_vars(self, settings, monitor):
         self.vpns = list(monitor.vpns.items())
@@ -536,6 +542,7 @@ class OpenvpnHtmlPrinter(object):
         if self.maps:
             self.maps_height = settings.get('maps_height', 500)
         self.location = is_truthy(settings.get('location', False))
+        self.printlog = is_truthy(settings.get('printlog', False))
         self.latitude = settings.get('latitude', 40.72)
         self.longitude = settings.get('longitude', -74)
         self.datetime_format = settings.get('datetime_format')
@@ -569,6 +576,10 @@ class OpenvpnHtmlPrinter(object):
         output('   padding:.4em .4em .4em;')
         output('   line-height:1;')
         output('   font-weight:700;')
+        output('}')
+        output('textarea {')
+        output('   resize: none;')
+        output('   width:100%;')
         output('}')
         output('</style>')
 
@@ -730,9 +741,6 @@ class OpenvpnHtmlPrinter(object):
             self.print_session_table_footer()
 
         output('</div>')
-        output('<div class="panel-footer panel-custom">')
-        output('{0!s}'.format(vpn['release']))
-        output('</div>')
         output('</div>')
 
     @staticmethod
@@ -827,23 +835,23 @@ class OpenvpnHtmlPrinter(object):
 
     def print_computer_list_table(self, computers):
         output('<tr>')
-        output('<td>{0!s}</td>'.format('QuangHa'))
+        output('<td>{0!s}</td>'.format(computers))
         output('<td>{0!s}</td>'.format('QuangSkyVu'))
         output('<td>{0!s}</td>'.format('192.168.0.10'))
         output('<td>{0!s}</td>'.format('5C-80-B6-BA-01-2A'))
         output('<td>{0!s}</td>'.format('255.255.255.0'))
-        output('<td>{0!s}</td>'.format('Online'))
+        output('<td>{0!s}</td>'.format('Unknow'))
         #Wake button
         output('<td><form method="post">')
-        output('<input type="hidden" name="action" value="{0!s}">'.format('ping'))
-        output('<input type="hidden" name="ip" value="{0!s}">'.format('192.168.1.100'))
+        output('<input type="hidden" name="action" value="{0!s}">'.format('wol'))
+        output('<input type="hidden" name="mac-address" value="{0!s}">'.format('5C-80-B6-BA-01-2A'))
         output('<button type="submit" class="btn btn-xs btn-success">')
         output('<span class="glyphicon glyphicon-off"></span> ')
         output('Wake This PC</button></form></td>')
         #ping button
         output('<td><form method="post">')
         output('<input type="hidden" name="action" value="{0!s}">'.format('ping'))
-        output('<input type="hidden" name="ip" value="{0!s}">'.format('192.168.1.100'))
+        output('<input type="hidden" name="computer-name" value="{0!s}">'.format('192.168.1.100'))
         output('<button type="submit" class="btn btn-xs btn-info">')
         output('<span class="glyphicon glyphicon-send"></span> ')
         output('Ping</button></form></td>')
@@ -857,16 +865,13 @@ class OpenvpnHtmlPrinter(object):
 
         #if vpn_mode == 'Client' or nclients > 0:
         self.print_wol_header()
-        self.print_computer_list_table('vpn-id')
-        self.print_computer_list_table('vpn-id')
-        self.print_computer_list_table('vpn-id')
-        self.print_computer_list_table('vpn-id')
-        self.print_computer_list_table('vpn-id')
+        self.print_computer_list_table('QuangHa 1')
+        self.print_computer_list_table('QuangHa 2')
+        self.print_computer_list_table('QuangHa 3')
+        self.print_computer_list_table('QuangHa 4')
+        self.print_computer_list_table('QuangHa 5')
         self.print_session_table_footer()
 
-        output('</div>')
-        output('<div class="panel-footer panel-custom">')
-        output('{0!s}'.format('vpn-release'))
         output('</div>')
         output('</div>')
 
@@ -917,12 +922,29 @@ class OpenvpnHtmlPrinter(object):
         output('</script>')
         output('</div></div>')
 
-    def print_html_footer(self):
+    def print_python_log(self):
+        anchor = 'QuangHa'
+        output('<div class="panel panel-success" id="{0!s}">'.format(anchor))
+        output('<div class="panel-heading"><h3 class="panel-title">{0!s}</h3>'.format('Python Logs'))
+        output('</div><div class="panel-body">')
+
+        output('<textarea id="w3review" name="w3review" rows="4">')
+        output('{0!s}'.format(global_log))
+        output('</textarea>')
+
+        output('</div>')
+        output('</div>')
+
+    def print_html_footer(self, vpn):
         output('<div class="well well-sm">')
         output('Page automatically reloads every 5 minutes.')
         tz_NY = pytz.timezone('Asia/Ho_Chi_Minh')
-        output('Last update: <b>{0!s}</b></div>'.format(
+        output('Last update: <b>{0!s}</b><br>'.format(
             datetime.now(tz_NY).strftime(self.datetime_format)))
+        if vpn['socket_connected']:
+            #output('<div class="panel-footer panel-custom">')
+            output('{0!s}'.format(vpn['release']))
+            output('</div>')
         output('</div></body></html>')
 
 
@@ -950,6 +972,7 @@ def get_args():
 if __name__ == '__main__':
     args = get_args()
     wsgi = False
+    global_log = ''
     #wsgi_output = ''
     main()
 
@@ -962,8 +985,9 @@ def monitor_wsgi():
         image_dir = owd + '/../../../share/openvpn-monitor/'
     else:
         image_dir = ''
-
+    
     app = Bottle()
+
 
     def render(**kwargs):
         global wsgi_output
@@ -980,14 +1004,25 @@ def monitor_wsgi():
 
     @app.route('/', method='GET')
     def get_slash():
+        global global_log
+        global_log = 'Method: Get'
         return render()
 
     @app.route('/', method='POST')
     def post_slash():
+        global global_log
+        global_log = 'Method: Post'
         vpn_id = request.forms.get('vpn_id')
         ip = request.forms.get('ip')
         port = request.forms.get('port')
         client_id = request.forms.get('client_id')
+        action = request.forms.get('action')
+
+        if (action == 'ping'):
+            debug("Ping command")
+        elif (action == 'wol'):
+            debug("WOL command")
+
         return render(vpn_id=vpn_id, ip=ip, port=port, client_id=client_id)
 
     @app.route('/<filename:re:.*\.(jpg|png)>', method='GET')
@@ -1011,4 +1046,5 @@ if __name__.startswith('_mod_wsgi_') or \
 
     wsgi = True
     wsgi_output = ''
+    global_log = ''
     application = monitor_wsgi()
