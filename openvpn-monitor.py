@@ -49,6 +49,7 @@ import os
 import re
 import socket
 import string
+import json
 import sys
 import pytz
 from datetime import datetime
@@ -140,6 +141,7 @@ class ConfigLoader(object):
                          'location': 'True',
                          'geoip_data': '/usr/share/GeoIP/GeoIPCity.dat',
                          'wakeonlan': 'True',
+                         'woldatapath': 'woldata.json',
                          'printlog': 'True',
                          'datetime_format': '%d/%m/%Y %H:%M:%S'}
         self.vpns['Default VPN'] = {'name': 'default',
@@ -149,7 +151,7 @@ class ConfigLoader(object):
                                     'show_disconnect': False}
 
     def parse_global_section(self, config):
-        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'maps_height', 'location', 'geoip_data', 'wakeonlan', 'printlog', 'datetime_format']
+        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'maps_height', 'location', 'geoip_data', 'wakeonlan','woldatapath' , 'printlog', 'datetime_format']
         for var in global_vars:
             try:
                 self.settings[var] = config.get('openvpn-monitor', var)
@@ -514,11 +516,21 @@ class OpenvpnMgmtInterface(object):
         else:
             return '{0!s}'.format(ip)
 
+class WakeOnLanReadData(object):
+    def __init__(self, cfg):
+        self.readdata(cfg.settings)
+
+    def readdata(self, settings):
+        self.dataPath = settings.get('woldatapath')
+        f = open(self.dataPath)
+        data = json.load(f)
+        f.close()
+        self.data = data
 
 class OpenvpnHtmlPrinter(object):
 
-    def __init__(self, cfg, monitor):
-        self.init_vars(cfg.settings, monitor)
+    def __init__(self, cfg, monitor, woldata):
+        self.init_vars(cfg.settings, monitor, woldata)
         self.print_html_header()
         for key, vpn in self.vpns:
             if vpn['socket_connected']:
@@ -533,12 +545,13 @@ class OpenvpnHtmlPrinter(object):
             self.print_python_log()
         self.print_html_footer(vpn)
 
-    def init_vars(self, settings, monitor):
+    def init_vars(self, settings, monitor, woldata):
         self.vpns = list(monitor.vpns.items())
         self.site = settings.get('site', 'Example')
         self.logo = settings.get('logo')
         self.maps = is_truthy(settings.get('maps', False))
         self.wakeonlan = settings.get('wakeonlan')
+        self.woldata = woldata.data
         if self.maps:
             self.maps_height = settings.get('maps_height', 500)
         self.location = is_truthy(settings.get('location', False))
@@ -835,23 +848,23 @@ class OpenvpnHtmlPrinter(object):
 
     def print_computer_list_table(self, computers):
         output('<tr>')
-        output('<td>{0!s}</td>'.format(computers))
-        output('<td>{0!s}</td>'.format('QuangSkyVu'))
-        output('<td>{0!s}</td>'.format('192.168.0.10'))
-        output('<td>{0!s}</td>'.format('5C-80-B6-BA-01-2A'))
-        output('<td>{0!s}</td>'.format('255.255.255.0'))
+        output('<td>{0!s}</td>'.format(computers['UserName']))
+        output('<td>{0!s}</td>'.format(computers['ComputerName']))
+        output('<td>{0!s}</td>'.format(computers['IpAddress']))
+        output('<td>{0!s}</td>'.format(computers['MacAddress']))
+        output('<td>{0!s}</td>'.format(computers['SubNetMask']))
         output('<td>{0!s}</td>'.format('Unknow'))
         #Wake button
         output('<td><form method="post">')
         output('<input type="hidden" name="action" value="{0!s}">'.format('wol'))
-        output('<input type="hidden" name="mac-address" value="{0!s}">'.format('5C-80-B6-BA-01-2A'))
+        output('<input type="hidden" name="mac-address" value="{0!s}">'.format(computers['MacAddress']))
         output('<button type="submit" class="btn btn-xs btn-success">')
         output('<span class="glyphicon glyphicon-off"></span> ')
         output('Wake This PC</button></form></td>')
         #ping button
         output('<td><form method="post">')
         output('<input type="hidden" name="action" value="{0!s}">'.format('ping'))
-        output('<input type="hidden" name="computer-name" value="{0!s}">'.format('192.168.1.100'))
+        output('<input type="hidden" name="computer-name" value="{0!s}">'.format(computers['IpAddress']))
         output('<button type="submit" class="btn btn-xs btn-info">')
         output('<span class="glyphicon glyphicon-send"></span> ')
         output('Ping</button></form></td>')
@@ -865,11 +878,8 @@ class OpenvpnHtmlPrinter(object):
 
         #if vpn_mode == 'Client' or nclients > 0:
         self.print_wol_header()
-        self.print_computer_list_table('QuangHa 1')
-        self.print_computer_list_table('QuangHa 2')
-        self.print_computer_list_table('QuangHa 3')
-        self.print_computer_list_table('QuangHa 4')
-        self.print_computer_list_table('QuangHa 5')
+        for i in self.woldata:
+            self.print_computer_list_table(i)
         self.print_session_table_footer()
 
         output('</div>')
@@ -951,7 +961,8 @@ class OpenvpnHtmlPrinter(object):
 def main(**kwargs):
     cfg = ConfigLoader(args.config)
     monitor = OpenvpnMgmtInterface(cfg, **kwargs)
-    OpenvpnHtmlPrinter(cfg, monitor)
+    woldata = WakeOnLanReadData(cfg)
+    OpenvpnHtmlPrinter(cfg, monitor, woldata)
     if args.debug:
         pretty_vpns = pformat((dict(monitor.vpns)))
         debug("=== begin vpns\n{0!s}\n=== end vpns".format(pretty_vpns))

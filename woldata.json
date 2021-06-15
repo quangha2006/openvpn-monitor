@@ -1,0 +1,72 @@
+[
+    {
+        "UserName": "gsadler0",
+        "ComputerName": "Genevieve",
+        "IpAddress": "120.148.185.87",
+        "MacAddress": "FC-12-13-92-64-15",
+        "SubNetMask": "255.255.255.0"
+    },
+    {
+        "UserName": "dhanshawe1",
+        "ComputerName": "Dun",
+        "IpAddress": "247.168.233.28",
+        "MacAddress": "7C-4B-48-39-DD-65",
+        "SubNetMask": "255.255.255.0"
+    },
+    {
+        "UserName": "iballham2",
+        "ComputerName": "Ivan",
+        "IpAddress": "244.140.194.42",
+        "MacAddress": "B9-D9-30-EE-BC-95",
+        "SubNetMask": "255.255.255.0"
+    },
+    {
+        "UserName": "cbatistelli3",
+        "ComputerName": "Cyrille",
+        "IpAddress": "145.100.62.250",
+        "MacAddress": "B0-D6-12-21-88-9C",
+        "SubNetMask": "255.255.255.0"
+    },
+    {
+        "UserName": "jflegg4",
+        "ComputerName": "Jarret",
+        "IpAddress": "20.210.212.100",
+        "MacAddress": "45-97-1B-24-37-C2",
+        "SubNetMask": "255.255.255.0"
+    },
+    {
+        "UserName": "fdysert5",
+        "ComputerName": "Fernando",
+        "IpAddress": "144.134.136.241",
+        "MacAddress": "6E-E5-4D-24-4E-6F",
+        "SubNetMask": "255.255.255.0"
+    },
+    {
+        "UserName": "lwloch6",
+        "ComputerName": "Lonee",
+        "IpAddress": "92.152.204.31",
+        "MacAddress": "6B-A3-1B-2C-C2-88",
+        "SubNetMask": "255.255.255.0"
+    },
+    {
+        "UserName": "clait7",
+        "ComputerName": "Carmine",
+        "IpAddress": "162.110.170.228",
+        "MacAddress": "69-D0-69-6D-48-DD",
+        "SubNetMask": "255.255.255.0"
+    },
+    {
+        "UserName": "ltrusty8",
+        "ComputerName": "Lanae",
+        "IpAddress": "194.177.200.166",
+        "MacAddress": "4D-B9-1B-51-A6-0C",
+        "SubNetMask": "255.255.255.0"
+    },
+    {
+        "UserName": "gdundendale9",
+        "ComputerName": "Gabriel",
+        "IpAddress": "255.204.153.62",
+        "MacAddress": "57-45-81-0F-4E-DA",
+        "SubNetMask": "255.255.255.0"
+    }
+]
