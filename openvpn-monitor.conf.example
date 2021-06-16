@@ -9,6 +9,7 @@ location=True
 geoip_data=./GeoIP/GeoLite2-City.mmdb
 wakeonlan=True
 woldatapath=woldata.json
+woltoolpath=/home/username/Downloads/WOL2/WOLLinux
 printlog=True
 datetime_format=%d/%m/%Y %H:%M:%S
 

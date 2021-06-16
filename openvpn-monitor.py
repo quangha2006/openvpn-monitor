@@ -46,6 +46,7 @@ except ImportError:
 
 import argparse
 import os
+import subprocess
 import re
 import socket
 import string
@@ -813,6 +814,7 @@ class OpenvpnHtmlPrinter(object):
         output('<td>{0!s}</td>'.format(total_time))
         if show_disconnect:
             output('<td><form method="post">')
+            output('<input type="hidden" name="action" value="{0!s}">'.format('disconnect'))
             output('<input type="hidden" name="vpn_id" value="{0!s}">'.format(vpn_id))
             if session.get('port'):
                 output('<input type="hidden" name="ip" value="{0!s}">'.format(session['remote_ip']))
@@ -864,7 +866,7 @@ class OpenvpnHtmlPrinter(object):
         #ping button
         output('<td><form method="post">')
         output('<input type="hidden" name="action" value="{0!s}">'.format('ping'))
-        output('<input type="hidden" name="computer-name" value="{0!s}">'.format(computers['IpAddress']))
+        output('<input type="hidden" name="Ip-address" value="{0!s}">'.format(computers['IpAddress']))
         output('<button type="submit" class="btn btn-xs btn-info">')
         output('<span class="glyphicon glyphicon-send"></span> ')
         output('Ping</button></form></td>')
@@ -967,6 +969,12 @@ def main(**kwargs):
         pretty_vpns = pformat((dict(monitor.vpns)))
         debug("=== begin vpns\n{0!s}\n=== end vpns".format(pretty_vpns))
 
+def perform_ping(ip):
+    info('perform ping {0!s}'.format(ip))
+
+def perform_wol(mac):
+    test = subprocess.run(["/home/quangha/Downloads/WOL2/WOLLinux","-m",mac,"-ib","192.168.1.255"], capture_output=True)
+    info('perform wake up pc {0!s}'.format(test.stdout))
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -1027,14 +1035,21 @@ def monitor_wsgi():
         ip = request.forms.get('ip')
         port = request.forms.get('port')
         client_id = request.forms.get('client_id')
+        ip = request.forms.get('Ip-address')
+        mac_address = request.forms.get('mac-address')
         action = request.forms.get('action')
 
         if (action == 'ping'):
             debug("Ping command")
         elif (action == 'wol'):
             debug("WOL command")
-
-        return render(vpn_id=vpn_id, ip=ip, port=port, client_id=client_id)
+        if (action == 'disconnect'):
+            return render(vpn_id=vpn_id, ip=ip, port=port, client_id=client_id)
+        elif (action == 'ping'):
+            perform_ping(ip)    
+        elif (action == 'wol'):
+            perform_wol(mac_address)
+        return render()
 
     @app.route('/<filename:re:.*\.(jpg|png)>', method='GET')
     def get_images(filename):
