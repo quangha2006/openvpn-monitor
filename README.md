@@ -56,12 +56,15 @@ See [configuration](#configuration) for details on configuring openvpn-monitor.
 ##### Debian / Ubuntu
 
 ```shell
-apt-get -y install git apache2 libapache2-mod-wsgi python-geoip2 python-ipaddr python-humanize python-bottle python-semantic-version geoip-database-extra geoipupdate
+apt-get -y install git apache2 libapache2-mod-wsgi-py3 python-geoip2 python-ipaddr python-humanize python-bottle python-semantic-version geoip-database-extra geoipupdate
 echo "WSGIScriptAlias /openvpn-monitor /var/www/html/openvpn-monitor/openvpn-monitor.py" > /etc/apache2/conf-available/openvpn-monitor.conf
 a2enconf openvpn-monitor
 systemctl restart apache2
 ```
-
+```shell
+pip install pythonping
+sudo setcap cap_net_raw+ep $(readlink -f $(which python3))
+```
 ##### CentOS / RHEL
 
 ```shell

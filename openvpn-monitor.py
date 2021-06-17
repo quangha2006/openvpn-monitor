@@ -43,7 +43,7 @@ try:
     geoip2_available = True
 except ImportError:
     geoip2_available = False
-
+    
 import argparse
 import os
 import subprocess
@@ -58,6 +58,7 @@ from humanize import naturalsize
 from collections import OrderedDict, deque
 from pprint import pformat
 from semantic_version import Version as semver
+from pythonping import ping
 
 if sys.version_info[0] == 2:
     reload(sys) # noqa
@@ -143,6 +144,8 @@ class ConfigLoader(object):
                          'geoip_data': '/usr/share/GeoIP/GeoIPCity.dat',
                          'wakeonlan': 'True',
                          'woldatapath': 'woldata.json',
+                         'woltoolpath': '/home/username/Downloads/WOL2/WOLLinux',
+                         'allowping': 'False',
                          'printlog': 'True',
                          'datetime_format': '%d/%m/%Y %H:%M:%S'}
         self.vpns['Default VPN'] = {'name': 'default',
@@ -152,7 +155,7 @@ class ConfigLoader(object):
                                     'show_disconnect': False}
 
     def parse_global_section(self, config):
-        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'maps_height', 'location', 'geoip_data', 'wakeonlan','woldatapath' , 'printlog', 'datetime_format']
+        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'maps_height', 'location', 'geoip_data', 'wakeonlan','woldatapath' ,'allowping' , 'printlog', 'datetime_format']
         for var in global_vars:
             try:
                 self.settings[var] = config.get('openvpn-monitor', var)
@@ -970,7 +973,13 @@ def main(**kwargs):
         debug("=== begin vpns\n{0!s}\n=== end vpns".format(pretty_vpns))
 
 def perform_ping(ip):
-    info('perform ping {0!s}'.format(ip))
+    ResponseList = ping(ip,count=1)
+    ResponseList.success
+    if ResponseList.success:
+        info('perform ping {0!s} {1!s}'.format(ip,'Success'))
+    else:
+        info('Failed with {0!s}'.format(r.ret_code))
+
 
 def perform_wol(mac):
     test = subprocess.run(["/home/quangha/Downloads/WOL2/WOLLinux","-m",mac,"-ib","192.168.1.255"], capture_output=True)
