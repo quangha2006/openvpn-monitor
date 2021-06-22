@@ -840,7 +840,7 @@ class OpenvpnHtmlPrinter(object):
                 output('</tr>')
 
     def print_wol_header(self):
-        computers_header = ['Username', 'Computer Name', 'IP Address', 'MAC Address', 'Subnet Mask', 'Status', 'Action', 'Check Status']
+        computers_header = ['Username', 'Computer Name', 'IP Address', 'MAC Address', 'Subnet Mask', 'Action', 'Status', 'Check Status']
         
         output('<div class="table-responsive">')
         output('<table id="sessions" class="table table-striped table-bordered ')
@@ -858,7 +858,7 @@ class OpenvpnHtmlPrinter(object):
         output('<td>{0!s}</td>'.format(computers['IpAddress']))
         output('<td>{0!s}</td>'.format(computers['MacAddress']))
         output('<td>{0!s}</td>'.format(computers['SubNetMask']))
-        output('<td>{0!s}</td>'.format('Unknow'))
+
         #Wake button
         output('<td><form method="post">')
         output('<input type="hidden" name="action" value="{0!s}">'.format('wol'))
@@ -866,13 +866,15 @@ class OpenvpnHtmlPrinter(object):
         output('<button type="submit" class="btn btn-xs btn-success">')
         output('<span class="glyphicon glyphicon-off"></span> ')
         output('Wake This PC</button></form></td>')
+
+        output('<td>{0!s}</td>'.format('Not Implement'))
         #ping button
         output('<td><form method="post">')
         output('<input type="hidden" name="action" value="{0!s}">'.format('ping'))
         output('<input type="hidden" name="Ip-address" value="{0!s}">'.format(computers['IpAddress']))
         output('<button type="submit" class="btn btn-xs btn-info">')
         output('<span class="glyphicon glyphicon-send"></span> ')
-        output('Ping</button></form></td>')
+        output('Ping (Not implement yet)</button></form></td>')
         output('</tr>')
 
     def print_wake_on_lan(self):
