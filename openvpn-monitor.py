@@ -966,10 +966,12 @@ class OpenvpnHtmlPrinter(object):
 
 
 def main(**kwargs):
-    cfg = ConfigLoader(args.config)
-    monitor = OpenvpnMgmtInterface(cfg, **kwargs)
-    woldata = WakeOnLanReadData(cfg)
-    OpenvpnHtmlPrinter(cfg, monitor, woldata)
+    global global_config
+    if global_config is None:
+        global_config = ConfigLoader(args.config)
+    monitor = OpenvpnMgmtInterface(global_config, **kwargs)
+    woldata = WakeOnLanReadData(global_config)
+    OpenvpnHtmlPrinter(global_config, monitor, woldata)
     if args.debug:
         pretty_vpns = pformat((dict(monitor.vpns)))
         debug("=== begin vpns\n{0!s}\n=== end vpns".format(pretty_vpns))
@@ -984,9 +986,11 @@ def perform_ping(ip):
 
 
 def perform_wol(mac):
-    cfg = ConfigLoader(args.config)
-    toolPath = cfg.settings.get('woltoolpath')
-    ipBroadcast = cfg.settings.get('ipbroadcast')
+    global global_config
+    if global_config is None:
+        global_config = ConfigLoader(args.config)
+    toolPath = global_config.settings.get('woltoolpath')
+    ipBroadcast = global_config.settings.get('ipbroadcast')
     test = subprocess.run([toolPath,"-m",mac,"-ib",ipBroadcast], capture_output=True)
     info('perform wake up pc {0!s}'.format(test.stdout))
 
@@ -1087,4 +1091,5 @@ if __name__.startswith('_mod_wsgi_') or \
     wsgi = True
     wsgi_output = ''
     global_log = ''
+    global_config = None
     application = monitor_wsgi()
