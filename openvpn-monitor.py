@@ -840,7 +840,7 @@ class OpenvpnHtmlPrinter(object):
                 output('</tr>')
 
     def print_wol_header(self):
-        computers_header = ['Username', 'Computer Name', 'IP Address', 'MAC Address', 'Subnet Mask', 'Action']#, 'Status', 'Check Status']
+        computers_header = ['Username', 'Computer Name', 'MAC Address', 'Action']#, 'Status', 'Check Status']
         
         output('<div class="table-responsive">')
         output('<table id="sessions" class="table table-striped table-bordered ')
@@ -855,9 +855,7 @@ class OpenvpnHtmlPrinter(object):
         output('<tr>')
         output('<td>{0!s}</td>'.format(computers['UserName']))
         output('<td>{0!s}</td>'.format(computers['ComputerName']))
-        output('<td>{0!s}</td>'.format(computers['IpAddress']))
         output('<td>{0!s}</td>'.format(computers['MacAddress']))
-        output('<td>{0!s}</td>'.format(computers['SubNetMask']))
 
         #Wake button
         output('<td><form method="post">')
@@ -980,7 +978,7 @@ def perform_ping(ip):
     if ResponseList.success:
         info('perform ping {0!s} {1!s}'.format(ip,'Success'))
     else:
-        info('Failed with {0!s}'.format(r.ret_code))
+        info('Ping Failed: {0!s}'.format(ip))
 
 
 def perform_wol(mac):
