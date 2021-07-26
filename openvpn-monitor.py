@@ -145,6 +145,7 @@ class ConfigLoader(object):
                          'wakeonlan': 'True',
                          'woldatapath': 'woldata.json',
                          'woltoolpath': '/home/username/Downloads/WOL2/WOLLinux',
+                         'ipbroadcast': '192.168.1.255',
                          'allowping': 'False',
                          'printlog': 'True',
                          'datetime_format': '%d/%m/%Y %H:%M:%S'}
@@ -155,7 +156,7 @@ class ConfigLoader(object):
                                     'show_disconnect': False}
 
     def parse_global_section(self, config):
-        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'maps_height', 'location', 'geoip_data', 'wakeonlan','woldatapath' ,'allowping' , 'printlog', 'datetime_format']
+        global_vars = ['site', 'logo', 'latitude', 'longitude', 'maps', 'maps_height', 'location', 'geoip_data', 'wakeonlan','woldatapath' , 'woltoolpath','ipbroadcast', 'allowping' , 'printlog', 'datetime_format']
         for var in global_vars:
             try:
                 self.settings[var] = config.get('openvpn-monitor', var)
@@ -983,7 +984,10 @@ def perform_ping(ip):
 
 
 def perform_wol(mac):
-    test = subprocess.run(["/usr/share/wakeonlan/WOLLinux/bin/Release/netcoreapp3.1/publish/WOLLinux","-m",mac,"-ib","192.168.1.255"], capture_output=True)
+    cfg = ConfigLoader(args.config)
+    toolPath = cfg.settings.get('woltoolpath')
+    ipBroadcast = cfg.settings.get('ipbroadcast')
+    test = subprocess.run([toolPath,"-m",mac,"-ib",ipBroadcast], capture_output=True)
     info('perform wake up pc {0!s}'.format(test.stdout))
 
 def get_args():
