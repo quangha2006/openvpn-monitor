@@ -159,6 +159,7 @@ class ConfigLoader(object):
         for var in global_vars:
             try:
                 self.settings[var] = config.get('openvpn-monitor', var)
+                print("DEBUG Setting: ", self.settings[var])
             except configparser.NoSectionError:
                 # backwards compat
                 try:
