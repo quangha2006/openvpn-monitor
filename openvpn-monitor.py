@@ -555,7 +555,7 @@ class OpenvpnHtmlPrinter(object):
         self.site = settings.get('site', 'Example')
         self.logo = settings.get('logo')
         self.maps = is_truthy(settings.get('maps', False))
-        self.wakeonlan = settings.get('wakeonlan')
+        self.wakeonlan = is_truthy(settings.get('wakeonlan', False))
         self.woldata = woldata.data
         if self.maps:
             self.maps_height = settings.get('maps_height', 500)
