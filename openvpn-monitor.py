@@ -58,7 +58,7 @@ from humanize import naturalsize
 from collections import OrderedDict, deque
 from pprint import pformat
 from semantic_version import Version as semver
-from pythonping import ping
+#from pythonping import ping
 
 if sys.version_info[0] == 2:
     reload(sys) # noqa
@@ -974,12 +974,12 @@ def main(**kwargs):
         debug("=== begin vpns\n{0!s}\n=== end vpns".format(pretty_vpns))
 
 def perform_ping(ip):
-    ResponseList = ping(ip,count=1)
-    ResponseList.success
-    if ResponseList.success:
-        info('perform ping {0!s} {1!s}'.format(ip,'Success'))
-    else:
-        info('Ping Failed: {0!s}'.format(ip))
+    #ResponseList = ping(ip,count=1)
+    #ResponseList.success
+    #if ResponseList.success:
+    #    info('perform ping {0!s} {1!s}'.format(ip,'Success'))
+    #else:
+    info('Ping Failed: {0!s}'.format(ip))
 
 
 def perform_wol(mac):
