@@ -983,7 +983,7 @@ def perform_ping(ip):
 
 
 def perform_wol(mac):
-    test = subprocess.run(["/home/quangha/Downloads/WOL2/WOLLinux","-m",mac,"-ib","192.168.1.255"], capture_output=True)
+    test = subprocess.run(["/usr/share/wakeonlan/WOLLinux/bin/Release/netcoreapp3.1/publish/WOLLinux","-m",mac,"-ib","192.168.1.255"], capture_output=True)
     info('perform wake up pc {0!s}'.format(test.stdout))
 
 def get_args():
