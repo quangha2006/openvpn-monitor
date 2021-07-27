@@ -2,15 +2,11 @@
     {
         "UserName": "demo1",
         "ComputerName": "demo1",
-        "IpAddress": "120.148.185.87",
-        "MacAddress": "FC-12-13-92-64-15",
-        "SubNetMask": "255.255.255.0"
+        "MacAddress": "FC-12-13-92-64-15"
     },
     {
         "UserName": "demo2",
         "ComputerName": "demo2",
-        "IpAddress": "247.168.233.28",
-        "MacAddress": "7C-4B-48-39-DD-65",
-        "SubNetMask": "255.255.255.0"
+        "MacAddress": "7C-4B-48-39-DD-65"
     }
 ]
