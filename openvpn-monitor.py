@@ -1012,6 +1012,7 @@ if __name__ == '__main__':
     wsgi = False
     global_log = ''
     #wsgi_output = ''
+    global_config = None
     main()
 
 
