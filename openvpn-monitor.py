@@ -842,7 +842,7 @@ class OpenvpnHtmlPrinter(object):
                 output('</tr>')
 
     def print_wol_header(self):
-        computers_header = ['Username', 'Computer Name', 'MAC Address', 'Action']#, 'Status', 'Check Status']
+        computers_header = ['Username', 'Computer Name', 'IP Address', 'MAC Address', 'Action']#, 'Status', 'Check Status']
         
         output('<div class="table-responsive">')
         output('<table id="sessions" class="table table-striped table-bordered ')
@@ -857,6 +857,7 @@ class OpenvpnHtmlPrinter(object):
         output('<tr>')
         output('<td>{0!s}</td>'.format(computers['UserName']))
         output('<td>{0!s}</td>'.format(computers['ComputerName']))
+        output('<td>{0!s}</td>'.format(computers['IPAddress']))
         output('<td>{0!s}</td>'.format(computers['MacAddress']))
 
         #Wake button
