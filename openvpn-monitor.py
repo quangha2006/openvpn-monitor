@@ -553,6 +553,8 @@ class OpenvpnHtmlPrinter(object):
 
     def init_vars(self, settings, monitor, woldata):
         self.vpns = list(monitor.vpns.items())
+        f = open("./CSS/style.css", "r")
+        self.css = f.read()
         self.site = settings.get('site', 'Example')
         self.logo = settings.get('logo')
         self.maps = is_truthy(settings.get('maps', False))
@@ -587,19 +589,7 @@ class OpenvpnHtmlPrinter(object):
             output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" integrity="sha512-1xoFisiGdy9nvho8EgXuXvnpR5GAMSjFwp40gSRE3NwdUdIMIKuPa7bqoUhLD0O/5tPNhteAsE5XyyMi5reQVA==" crossorigin="anonymous" />')  # noqa
             output('<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.0.0/Control.FullScreen.min.css" integrity="sha512-DRkMa+fn898M1uc6s9JZeztUoXN6viuHsXmh/pgz3jG6a77YWO3U3QYEjLoqbxOeclc2NunWfMTya4Y5twXAKA==" crossorigin="anonymous" />')  # noqa
         output('<style>')
-        output('.panel-custom {')
-        output('   background-color:#777;')
-        output('   color:#fff;')
-        output('   font-size:80%;')
-        output('   vertical-align:baseline;')
-        output('   padding:.4em .4em .4em;')
-        output('   line-height:1;')
-        output('   font-weight:700;')
-        output('}')
-        output('textarea {')
-        output('   resize: none;')
-        output('   width:100%;')
-        output('}')
+        output('{0!s}'.format(self.css))
         output('</style>')
 
         # js
