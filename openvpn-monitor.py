@@ -955,7 +955,6 @@ class OpenvpnHtmlPrinter(object):
         # <!-- The alertpopup -->
         output('<div id="alertpopup" class="cd-popup" role="alert">')
         output('    <div class="cd-popup-content">')
-        output('        <span class="alertpopup_close">&times;</span>')
         output('        <p id="response_text">Response Text Here! </p>')
         output('        <ul class="cd-buttons-single">')
         output('            <button id="btn_ok">Ok</button>')
@@ -969,7 +968,6 @@ class OpenvpnHtmlPrinter(object):
         #Get the modal
         output('var modal = document.getElementById("myModal");')
         output('var alertpopup = document.getElementById("alertpopup");')
-        output('var alertpopup_close = document.getElementsByClassName("alertpopup_close")[0];')
         for i in self.woldata:
             # Get the button that opens the modal
             output('var btn_{0!s} = document.getElementById("{1!s}");'.format(i['UserName'],i['UserName']))
@@ -1015,9 +1013,7 @@ class OpenvpnHtmlPrinter(object):
         output('btn_ok.onclick = function() {')
         output('    alertpopup.style.display = "none";')
         output('}')
-        output('alertpopup_close.onclick = function() {')
-        output('    alertpopup.style.display = "none";')
-        output('}')
+        output('')
         output('btn_cancel.onclick = function() {')
         output('    modal.style.display = "none";')
         output('}')

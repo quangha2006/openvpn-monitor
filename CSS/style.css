@@ -90,8 +90,9 @@
   height: 40px;
   list-style: none;
   border: none;
+  margin: 0px 0px 10px auto;
+  padding: 0px;
   background-color: #ff6860;
-  padding: 15px 32px;
   text-align: center;
   text-decoration: none;
   font-size: 16px;
@@ -100,13 +101,7 @@
 }
 
 /* The Close Button */
-.alertpopup_close {
-  color: rgb(90, 90, 90);
-  float: right;
-  margin: 2px 5px;
-  font-size: 28px;
-  font-weight: bold;
-}
+
 .close {
   color: rgb(90, 90, 90);
   float: right;
@@ -114,8 +109,7 @@
   font-size: 28px;
   font-weight: bold;
 }
-.alertpopup_close:hover,
-.alertpopup_close:focus,
+
 .close:hover,
 .close:focus {
   color: black;
