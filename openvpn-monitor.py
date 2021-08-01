@@ -857,6 +857,7 @@ class OpenvpnHtmlPrinter(object):
         #Wake button
         output('<td>')
         output('<button type="submit" class="btn btn-xs btn-success" id="{0!s}">'.format(computers['UserName']))
+        output('<input type="hidden" id="input-{0!s}" value="{1!s}">'.format(computers['UserName'],computers['MacAddress']))
         output('<span class="glyphicon glyphicon-off"></span>')
         output('Wake This PC</button>')
         output('</td>')
@@ -949,6 +950,7 @@ class OpenvpnHtmlPrinter(object):
         output('        <button id="btnconfirm">Yes</button>')
         output('        <button id="btncancel">No</button>')
         output('    </ul>')
+        output('    <input type="hidden" id="btnconfirm-data" value=""> ')
         output('</div>')
   
         output('</div>')
@@ -966,13 +968,23 @@ class OpenvpnHtmlPrinter(object):
         output('var btn_cancel =  document.getElementById("btncancel");')
         # Get the <span> element that closes the modal
         output('var span = document.getElementsByClassName("close")[0];')
+        output('var btn_confirm =  document.getElementById("btnconfirm");')
 
         for i in self.woldata:
             # When the user clicks on the button, open the modal 
             output('btn_{0!s}.onclick = function()'.format(i['UserName']))
             output('{')
+            output('var macaddress = document.getElementById("input-{0!s}").value;'.format(i['UserName']))
+            output('document.getElementById("btnconfirm-data").value = macaddress;')
             output('    modal.style.display = "block"')
             output('}')
+        
+        output('')
+        output('btn_confirm.onclick = function()')
+        output('{')
+        output('    modal.style.display = "none";')
+        output('    var macaddress = document.getElementById("btnconfirm-data").value;')
+        output('}')
 
         # When the user clicks on <span> (x), close the modal
         output('span.onclick = function() {')
