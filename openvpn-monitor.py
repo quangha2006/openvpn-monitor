@@ -969,7 +969,8 @@ class OpenvpnHtmlPrinter(object):
 
         for i in self.woldata:
             # When the user clicks on the button, open the modal 
-            output('btn_{0!s}.onclick = function() {'.format(i['UserName']))
+            output('btn_{0!s}.onclick = function()'.format(i['UserName']))
+            output('{')
             output('    modal.style.display = "block"')
             output('}')
 
