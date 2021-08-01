@@ -960,7 +960,7 @@ class OpenvpnHtmlPrinter(object):
         
         for i in self.woldata:
             # Get the button that opens the modal
-            output('var btn_{0!s} = document.getElementById("{0!s}");'.format(i['UserName']))
+            output('var btn_{0!s} = document.getElementById("{1!s}");'.format(i['UserName'],i['UserName']))
 
 
         output('var btn_cancel =  document.getElementById("btncancel");')
