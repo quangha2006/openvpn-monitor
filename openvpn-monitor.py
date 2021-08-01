@@ -71,6 +71,7 @@ def output(s):
         print(s)
     else:
         wsgi_output += s
+        wsgi_output += '\n'
 
 
 def info(*objs):
@@ -549,6 +550,9 @@ class OpenvpnHtmlPrinter(object):
             self.print_maps_html()
         if self.printlog:
             self.print_python_log()
+        if self.wakeonlan:    
+            self.print_html_modal()
+            self.print_script()
         self.print_html_footer(vpn)
 
     def init_vars(self, settings, monitor, woldata):
@@ -851,21 +855,10 @@ class OpenvpnHtmlPrinter(object):
         output('<td>{0!s}</td>'.format(computers['MacAddress']))
 
         #Wake button
-        output('<td><form method="post">')
-        output('<input type="hidden" name="action" value="{0!s}">'.format('wol'))
-        output('<input type="hidden" name="mac-address" value="{0!s}">'.format(computers['MacAddress']))
-        output('<button type="submit" class="btn btn-xs btn-success">')
+        output('<button type="submit" class="btn btn-xs btn-success" id="{0!s}">'.format(computers['UserName']))
         output('<span class="glyphicon glyphicon-off"></span> ')
-        output('Wake This PC</button></form></td>')
+        output('Wake This PC</button></td>')
 
-        #output('<td>{0!s}</td>'.format('Not Implement'))
-        #ping button
-        #output('<td><form method="post">')
-        #output('<input type="hidden" name="action" value="{0!s}">'.format('ping'))
-        #output('<input type="hidden" name="Ip-address" value="{0!s}">'.format(computers['IpAddress']))
-        #output('<button type="submit" class="btn btn-xs btn-info">')
-        #output('<span class="glyphicon glyphicon-send"></span> ')
-        #output('Ping (Not implement yet)</button></form></td>')
         output('</tr>')
 
     def print_wake_on_lan(self):
@@ -942,6 +935,59 @@ class OpenvpnHtmlPrinter(object):
 
         output('</div>')
         output('</div>')
+
+    def print_html_modal(self):
+        # <!-- The Modal -->
+        output('<div id="myModal" class="cd-popup" role="alert">')
+
+        #<!-- Modal content -->
+        output('    <div class="cd-popup-content">')
+        output('    <span class="close">&times;</span>')
+        output('    <p>Are you sure want to wake up the computer! </p>')
+        output('    <ul class="cd-buttons">')
+        output('        <button id="btnconfirm">Yes</button>')
+        output('        <button id="btncancel">No</button>')
+        output('    </ul>')
+        output('</div>')
+  
+        output('</div>')
+
+    def print_script(self):
+        output('<script>')
+        #Get the modal
+        output('var modal = document.getElementById("myModal");')
+        
+        # Get the button that opens the modal
+        output('var btn_wake_1 = document.getElementById("btnWake_1");')
+
+        output('var btn_wake_2 = document.getElementById("btnWake_2");')
+
+        output('var btn_cancel =  document.getElementById("btncancel");')
+        # Get the <span> element that closes the modal
+        output('var span = document.getElementsByClassName("close")[0];')
+
+        # When the user clicks on the button, open the modal 
+        output('btn_wake_1.onclick = function() {')
+        output('    modal.style.display = "block"')
+        output('}')
+
+        output('btn_wake_2.onclick = function() {')
+        output('    modal.style.display = "block"')
+        output('}')
+        # When the user clicks on <span> (x), close the modal
+        output('span.onclick = function() {')
+        output('    modal.style.display = "none";')
+        output('}')
+        output('btn_cancel.onclick = function() {')
+        output('    modal.style.display = "none";')
+        output('}')
+        # When the user clicks anywhere outside of the modal, close it
+        output('window.onclick = function(event) {')
+        output('    if (event.target == modal) {')
+        output('        modal.style.display = "none";')
+        output('    }')
+        output('} ')
+        output('</script>')
 
     def print_html_footer(self, vpn):
         output('<div class="well well-sm">')
