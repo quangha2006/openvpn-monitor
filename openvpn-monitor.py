@@ -855,10 +855,11 @@ class OpenvpnHtmlPrinter(object):
         output('<td>{0!s}</td>'.format(computers['MacAddress']))
 
         #Wake button
+        output('<td>')
         output('<button type="submit" class="btn btn-xs btn-success" id="{0!s}">'.format(computers['UserName']))
-        output('<span class="glyphicon glyphicon-off"></span> ')
-        output('Wake This PC</button></td>')
-
+        output('<span class="glyphicon glyphicon-off"></span>')
+        output('Wake This PC</button>')
+        output('</td>')
         output('</tr>')
 
     def print_wake_on_lan(self):
