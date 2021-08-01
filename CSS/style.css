@@ -85,7 +85,7 @@
     opacity: 1
 }
 
-.cd-popup-content .cd-buttons-single {
+.cd-popup-content .cd-buttons-single button {
   width: 80%;
   height: 40px;
   list-style: none;
@@ -98,14 +98,7 @@
   transition: 0.3s;
   opacity: 0.8;
 }
-.cd-popup-content .cd-buttons-single button {
-  list-style: none;
-  border: none;
-  color: white;
-  text-align: center;
-  text-decoration: none;
-  font-size: 16px;
-}
+
 /* The Close Button */
 .alertpopup_close {
   color: rgb(90, 90, 90);
