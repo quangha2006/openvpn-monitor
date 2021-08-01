@@ -969,7 +969,8 @@ class OpenvpnHtmlPrinter(object):
         # Get the <span> element that closes the modal
         output('var span = document.getElementsByClassName("close")[0];')
         output('var btn_confirm =  document.getElementById("btnconfirm");')
-
+        output('var xhttp = new XMLHttpRequest();')
+        output('')
         for i in self.woldata:
             # When the user clicks on the button, open the modal 
             output('btn_{0!s}.onclick = function()'.format(i['UserName']))
@@ -984,6 +985,9 @@ class OpenvpnHtmlPrinter(object):
         output('{')
         output('    modal.style.display = "none";')
         output('    var macaddress = document.getElementById("btnconfirm-data").value;')
+        output('    xhttp.open("POST","/",true);')
+        output('    var requestdata = "action=wol&&mac-address=" + macaddress;')
+        output('    xhttp.send(requestdata);')
         output('}')
 
         # When the user clicks on <span> (x), close the modal
