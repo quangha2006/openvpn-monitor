@@ -952,20 +952,32 @@ class OpenvpnHtmlPrinter(object):
         output('    </ul>')
         output('    <input type="hidden" id="btnconfirm-data" value=""> ')
         output('</div>')
-  
         output('</div>')
+        output('')
+        output('<div id="alertpopup" class="cd-popup" role="alert">')
+        output('<div class="cd-popup-content">')
+        output('<span class="alertpopup_close">&times;</span>')
+        output('<p id="response_text">Response Text Here! </p>')
+        output('<ul class="cd-buttons">')
+        output('<button id="btn_ok">Ok</button>')
+        output('</ul>')
+        output('</div>')
+        output('</div>')
+        output('')
 
     def print_script(self):
         output('<script>')
         #Get the modal
         output('var modal = document.getElementById("myModal");')
-        
+        output('var alertpopup = document.getElementById("alertpopup");')
+        output('var alertpopup_close = document.getElementsByClassName("alertpopup_close")[0];')
         for i in self.woldata:
             # Get the button that opens the modal
             output('var btn_{0!s} = document.getElementById("{1!s}");'.format(i['UserName'],i['UserName']))
 
 
         output('var btn_cancel =  document.getElementById("btncancel");')
+        output('var btn_ok =  document.getElementById("btn_ok");')
         # Get the <span> element that closes the modal
         output('var span = document.getElementsByClassName("close")[0];')
         output('var btn_confirm =  document.getElementById("btnconfirm");')
@@ -994,10 +1006,18 @@ class OpenvpnHtmlPrinter(object):
         output('{')
         output('    const wakeresponse = this.responseText;')
         output('    console.log(wakeresponse);')
+        output('    document.getElementById("response_text").innerHTML = wakeresponse;')
+        output('    alertpopup.style.display = "block"')
         output('}')
         # When the user clicks on <span> (x), close the modal
         output('span.onclick = function() {')
         output('    modal.style.display = "none";')
+        output('}')
+        output('btn_ok.onclick = function() {')
+        output('    alertpopup.style.display = "none";')
+        output('}')
+        output('alertpopup_close.onclick = function() {')
+        output('    alertpopup.style.display = "none";')
         output('}')
         output('btn_cancel.onclick = function() {')
         output('    modal.style.display = "none";')
@@ -1050,7 +1070,7 @@ def perform_wol(mac):
     toolPath = global_config.settings.get('woltoolpath')
     ipBroadcast = global_config.settings.get('ipbroadcast')
     test = subprocess.run([toolPath,"-m",mac,"-ib",ipBroadcast], capture_output=True)
-    out_command = 'perform wake up pc {0!s}'.format(test.stdout)
+    out_command = '{0!s}'.format(test.stdout)
     return out_command
 
 def get_args():
