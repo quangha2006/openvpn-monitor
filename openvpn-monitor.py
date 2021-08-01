@@ -988,6 +988,7 @@ class OpenvpnHtmlPrinter(object):
         output('    xhttp.open("POST","/",true);')
         output('    var requestdata = "action=wol&&mac-address=" + macaddress;')
         output('    xhttp.send(requestdata);')
+        output('    window.alert(requestdata);')
         output('}')
 
         # When the user clicks on <span> (x), close the modal
