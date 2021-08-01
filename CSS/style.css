@@ -84,12 +84,12 @@
 .cd-popup-content .cd-buttons button:last-child:hover{
     opacity: 1
 }
-.cd-popup-content .cd-buttons-single button {
+
+.cd-popup-content .cd-buttons-single {
   width: 80%;
   height: 40px;
   list-style: none;
   border: none;
-  color: white;
   background-color: #ff6860;
   padding: 15px 32px;
   text-align: center;
@@ -97,6 +97,14 @@
   font-size: 16px;
   transition: 0.3s;
   opacity: 0.8;
+}
+.cd-popup-content .cd-buttons-single button {
+  list-style: none;
+  border: none;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
 }
 /* The Close Button */
 .alertpopup_close {
