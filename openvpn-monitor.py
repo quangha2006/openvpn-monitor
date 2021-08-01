@@ -958,7 +958,7 @@ class OpenvpnHtmlPrinter(object):
         output('<div class="cd-popup-content">')
         output('<span class="alertpopup_close">&times;</span>')
         output('<p id="response_text">Response Text Here! </p>')
-        output('<ul class="cd-buttons">')
+        output('<ul class="cd-buttons-single">')
         output('<button id="btn_ok">Ok</button>')
         output('</ul>')
         output('</div>')
