@@ -988,9 +988,13 @@ class OpenvpnHtmlPrinter(object):
         output('    xhttp.open("POST","/",true);')
         output('    var requestdata = "action=wol&&mac-address=" + macaddress;')
         output('    xhttp.send(requestdata);')
-        output('    window.alert(requestdata);')
+        output('    console.log(requestdata);')
         output('}')
-
+        output('xhttp.onload = function()')
+        output('{')
+        output('    const wakeresponse = this.responseText;')
+        output('    console.log(wakeresponse);')
+        output('}')
         # When the user clicks on <span> (x), close the modal
         output('span.onclick = function() {')
         output('    modal.style.display = "none";')
@@ -1046,7 +1050,8 @@ def perform_wol(mac):
     toolPath = global_config.settings.get('woltoolpath')
     ipBroadcast = global_config.settings.get('ipbroadcast')
     test = subprocess.run([toolPath,"-m",mac,"-ib",ipBroadcast], capture_output=True)
-    info('perform wake up pc {0!s}'.format(test.stdout))
+    out_command = 'perform wake up pc {0!s}'.format(test.stdout)
+    return out_command
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -1121,8 +1126,8 @@ def monitor_wsgi():
         elif (action == 'ping'):
             perform_ping(ip)    
         elif (action == 'wol'):
-            perform_wol(mac_address)
-        return render()
+            return perform_wol(mac_address)
+        #return render()
 
     @app.route('/<filename:re:.*\.(jpg|png)>', method='GET')
     def get_images(filename):
