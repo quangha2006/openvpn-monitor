@@ -550,7 +550,8 @@ class OpenvpnHtmlPrinter(object):
             self.print_maps_html()
         if self.printlog:
             self.print_python_log()
-        if self.wakeonlan:    
+        if self.wakeonlan:
+            warning('print_html_modal')
             self.print_html_modal()
             self.print_script()
         self.print_html_footer(vpn)
