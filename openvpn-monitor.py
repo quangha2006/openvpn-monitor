@@ -550,9 +550,7 @@ class OpenvpnHtmlPrinter(object):
             self.print_maps_html()
         if self.printlog:
             self.print_python_log()
-        info('print_html_modal 1')
         if self.wakeonlan:
-            info('print_html_modal')
             self.print_html_modal()
             self.print_script()
         self.print_html_footer(vpn)
@@ -960,23 +958,21 @@ class OpenvpnHtmlPrinter(object):
         #Get the modal
         output('var modal = document.getElementById("myModal");')
         
-        # Get the button that opens the modal
-        output('var btn_wake_1 = document.getElementById("btnWake_1");')
+        for i in self.woldata:
+            # Get the button that opens the modal
+            output('var btn_{0!s} = document.getElementById("{1!s}");'.format(i['UserName']))
 
-        output('var btn_wake_2 = document.getElementById("btnWake_2");')
 
         output('var btn_cancel =  document.getElementById("btncancel");')
         # Get the <span> element that closes the modal
         output('var span = document.getElementsByClassName("close")[0];')
 
-        # When the user clicks on the button, open the modal 
-        output('btn_wake_1.onclick = function() {')
-        output('    modal.style.display = "block"')
-        output('}')
+        for i in self.woldata:
+            # When the user clicks on the button, open the modal 
+            output('btn_{0!s}.onclick = function() {'.format(i['UserName']))
+            output('    modal.style.display = "block"')
+            output('}')
 
-        output('btn_wake_2.onclick = function() {')
-        output('    modal.style.display = "block"')
-        output('}')
         # When the user clicks on <span> (x), close the modal
         output('span.onclick = function() {')
         output('    modal.style.display = "none";')
