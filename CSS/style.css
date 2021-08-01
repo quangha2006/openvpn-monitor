@@ -112,8 +112,8 @@
   font-size: 28px;
   font-weight: bold;
 }
-.alertpopup_close:hover
-.alertpopup_close:focus
+.alertpopup_close:hover,
+.alertpopup_close:focus,
 .close:hover,
 .close:focus {
   color: black;
