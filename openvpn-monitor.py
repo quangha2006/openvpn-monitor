@@ -1064,7 +1064,7 @@ def perform_wol(mac):
         global_config = ConfigLoader(args.config)
     toolPath = global_config.settings.get('woltoolpath')
     ipBroadcast = global_config.settings.get('ipbroadcast')
-    test = subprocess.run([toolPath,"-m",mac,"-ib",ipBroadcast], capture_output=True)
+    test = subprocess.run([toolPath,"-M",mac,"-IB",ipBroadcast], capture_output=True)
     out_command = '{0!s}'.format(test.stdout)
     return out_command
 
