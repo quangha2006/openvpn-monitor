@@ -1023,8 +1023,9 @@ class OpenvpnHtmlPrinter(object):
         output('xhttp.onload = function()')
         output('{')
         output('    const wakeresponse = this.responseText;')
+        output('    const jsonresponse = JSON.parse(wakeresponse)')
         output('    console.log(wakeresponse);')
-        output('    if (wakeresponse == "Ok") {')
+        output('    if (jsonresponse["ExitCode"] == 0) {')
         output('        Swal.fire(')
         output('            "Success!",')
         output('            "Please Wait for 30 Seconds to startup your computer.",')
@@ -1100,9 +1101,10 @@ def perform_wol(mac):
     sp = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True,)
     status = sp.wait()
     out, err = sp.communicate()
-    if status == 0:
-     return "Ok"
-    return "Failed"
+    json_response = {"ExitCode": status, "OutPut": out}
+    json_dump = json.dumps(json_response)
+    json_object = json.loads(json_dump)
+    return json_object
 
 def get_args():
     parser = argparse.ArgumentParser(
