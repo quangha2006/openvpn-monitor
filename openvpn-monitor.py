@@ -613,7 +613,12 @@ class OpenvpnHtmlPrinter(object):
             output('<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js" integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA==" crossorigin="anonymous"></script>')  # noqa
             output('<script src="//cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js" integrity="sha512-V8RRDnS4BZXrat3GIpnWx+XNYBHQGdK6nKOzMpX4R0hz9SPWt7fltGmmyGzUkVFZUQODO1rE+SWYJJkw3SYMhg==" crossorigin="anonymous"></script>')  # noqa
             output('<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.0.0/Control.FullScreen.min.js" integrity="sha512-c6ydt5Rypa1ptlnH2U1u+JybARYppbD1qxgythCI4pJ9EOfNYEWlLBjxBX926O3tq5p4Aw5GTY68vT0FdKbG3w==" crossorigin="anonymous"></script>')  # noqa
-
+        
+        output('')
+        #sweetalert2
+        output('<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>')
+        output('<script src="sweetalert2.all.min.js"></script>')
+        output('')
         output('</head><body>')
 
         output('<nav class="navbar navbar-inverse">')
@@ -1003,8 +1008,12 @@ class OpenvpnHtmlPrinter(object):
         output('{')
         output('    const wakeresponse = this.responseText;')
         output('    console.log(wakeresponse);')
-        output('    document.getElementById("response_text").innerHTML = wakeresponse;')
-        output('    alertpopup.style.display = "block"')
+        #output('    document.getElementById("response_text").innerHTML = wakeresponse;')
+        #output('    alertpopup.style.display = "block"')
+        output('    Swal.fire(')
+        output('     "Good job!",')
+        output('     "You clicked the button!",')
+        output('     "success")')
         output('}')
         # When the user clicks on <span> (x), close the modal
         output('span.onclick = function() {')
