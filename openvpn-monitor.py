@@ -994,7 +994,7 @@ class OpenvpnHtmlPrinter(object):
             output('var macaddress = document.getElementById("input-{0!s}").value;'.format(i['UserName']))
             output('Swal.fire({')
             output('  title: "Are you sure?",')
-            output('  text: "Are you sure want to wake up the computer of {0!s}!",'.format(i['ComputerName']))
+            output('  text: "Are you sure want to wake up computer {0!s}!",'.format(i['ComputerName']))
             output('  icon: "warning",')
             output('  showCancelButton: true,')
             output('  confirmButtonColor: "#3085d6",')
