@@ -545,13 +545,13 @@ class OpenvpnHtmlPrinter(object):
             else:
                 self.print_unavailable_vpn(vpn)
         if self.wakeonlan:
-            self.print_wake_on_lan()        
+            self.print_wake_on_lan()
         if self.maps:
             self.print_maps_html()
         if self.printlog:
             self.print_python_log()
         if self.wakeonlan:
-            self.print_html_modal()
+            #self.print_html_modal()
             self.print_script()
         self.print_html_footer(vpn)
 
@@ -613,11 +613,13 @@ class OpenvpnHtmlPrinter(object):
             output('<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js" integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA==" crossorigin="anonymous"></script>')  # noqa
             output('<script src="//cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js" integrity="sha512-V8RRDnS4BZXrat3GIpnWx+XNYBHQGdK6nKOzMpX4R0hz9SPWt7fltGmmyGzUkVFZUQODO1rE+SWYJJkw3SYMhg==" crossorigin="anonymous"></script>')  # noqa
             output('<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.0.0/Control.FullScreen.min.js" integrity="sha512-c6ydt5Rypa1ptlnH2U1u+JybARYppbD1qxgythCI4pJ9EOfNYEWlLBjxBX926O3tq5p4Aw5GTY68vT0FdKbG3w==" crossorigin="anonymous"></script>')  # noqa
-        
+
         output('')
         #sweetalert2
         output('<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>')
-        output('<script src="sweetalert2.all.min.js"></script>')
+        output('<script src="//cdn.jsdelivr.net/npm/sweetalert2@11.1.2/dist/sweetalert2.all.min.js"></script>')
+        #output('<script src="//cdn.jsdelivr.net/npm/sweetalert2@11.1.2/dist/sweetalert2.min.js"></script>')
+        #output('<link rel="stylesheet" href="cdn.jsdelivr.net/npm/sweetalert2@11.1.2/dist/sweetalert2.min.css">')
         output('')
         output('</head><body>')
 
@@ -842,7 +844,7 @@ class OpenvpnHtmlPrinter(object):
 
     def print_wol_header(self):
         computers_header = ['Username', 'Computer Name', 'IP Address', 'MAC Address', 'Action']#, 'Status', 'Check Status']
-        
+
         output('<div class="table-responsive">')
         output('<table id="sessions" class="table table-striped table-bordered ')
         output('table-hover table-condensed table-responsive ')
@@ -943,30 +945,30 @@ class OpenvpnHtmlPrinter(object):
         output('</div>')
         output('</div>')
 
-    def print_html_modal(self):
+    #def print_html_modal(self):
         # <!-- The Modal -->
-        output('<div id="myModal" class="cd-popup" role="alert">')
-        output('    <div class="cd-popup-content">')
-        output('        <span class="close">&times;</span>')
-        output('        <p>Are you sure want to wake up the computer! </p>')
-        output('        <ul class="cd-buttons">')
-        output('            <button id="btnconfirm">Yes</button>')
-        output('            <button id="btncancel">No</button>')
-        output('        </ul>')
-        output('        <input type="hidden" id="btnconfirm-data" value=""> ')
-        output('    </div>')
-        output('</div>')
-        output('')
+    #    output('<div id="myModal" class="cd-popup" role="alert">')
+    #    output('    <div class="cd-popup-content">')
+    #    output('        <span class="close">&times;</span>')
+    #    output('        <p>Are you sure want to wake up the computer! </p>')
+    #    output('        <ul class="cd-buttons">')
+    #    output('            <button id="btnconfirm">Yes</button>')
+    #    output('            <button id="btncancel">No</button>')
+    #    output('        </ul>')
+    #    output('        <input type="hidden" id="btnconfirm-data" value=""> ')
+    #    output('    </div>')
+    #    output('</div>')
+    #    output('')
         # <!-- The alertpopup -->
-        output('<div id="alertpopup" class="cd-popup" role="alert">')
-        output('    <div class="cd-popup-content">')
-        output('        <p id="response_text">Response Text Here! </p>')
-        output('        <ul class="cd-buttons-single">')
-        output('            <button id="btn_ok">Ok</button>')
-        output('        </ul>')
-        output('    </div>')
-        output('</div>')
-        output('')
+    #    output('<div id="alertpopup" class="cd-popup" role="alert">')
+    #    output('    <div class="cd-popup-content">')
+    #    output('        <p id="response_text">Response Text Here! </p>')
+    #    output('        <ul class="cd-buttons-single">')
+    #    output('            <button id="btn_ok">Ok</button>')
+    #    output('        </ul>')
+    #    output('    </div>')
+    #    output('</div>')
+    #    output('')
 
     def print_script(self):
         output('<script>')
@@ -990,42 +992,63 @@ class OpenvpnHtmlPrinter(object):
             output('btn_{0!s}.onclick = function()'.format(i['UserName']))
             output('{')
             output('var macaddress = document.getElementById("input-{0!s}").value;'.format(i['UserName']))
-            output('document.getElementById("btnconfirm-data").value = macaddress;')
-            output('    modal.style.display = "block"')
+            output('Swal.fire({')
+            output('  title: "Are you sure?",')
+            output('  text: "Are you sure want to wake up the computer of {0!s}!",'.format(i['ComputerName']))
+            output('  icon: "warning",')
+            output('  showCancelButton: true,')
+            output('  confirmButtonColor: "#3085d6",')
+            output('  cancelButtonColor: "#d33",')
+            output('  confirmButtonText: "Yes!"')
+            output('}).then((result) => {')
+            output('  if (result.isConfirmed) {')
+            output('    xhttp.open("POST","/",true);')
+            output('    var requestdata = "action=wol&&mac-address=" + macaddress;')
+            output('    xhttp.send(requestdata);')
+            output('    console.log(requestdata);')
+            output('  }')
+            output('})')
             output('}')
-        
+
         output('')
-        output('btn_confirm.onclick = function()')
-        output('{')
-        output('    modal.style.display = "none";')
-        output('    var macaddress = document.getElementById("btnconfirm-data").value;')
-        output('    xhttp.open("POST","/",true);')
-        output('    var requestdata = "action=wol&&mac-address=" + macaddress;')
-        output('    xhttp.send(requestdata);')
-        output('    console.log(requestdata);')
-        output('}')
+        #output('btn_confirm.onclick = function()')
+        #output('{')
+        #output('    modal.style.display = "none";')
+        #output('    var macaddress = document.getElementById("btnconfirm-data").value;')
+        #output('    xhttp.open("POST","/",true);')
+        #output('    var requestdata = "action=wol&&mac-address=" + macaddress;')
+        #output('    xhttp.send(requestdata);')
+        #output('    console.log(requestdata);')
+        #output('}')
         output('xhttp.onload = function()')
         output('{')
         output('    const wakeresponse = this.responseText;')
         output('    console.log(wakeresponse);')
-        #output('    document.getElementById("response_text").innerHTML = wakeresponse;')
-        #output('    alertpopup.style.display = "block"')
-        output('    Swal.fire(')
-        output('     "Good job!",')
-        output('     "You clicked the button!",')
-        output('     "success")')
+        output('    if (wakeresponse == "Ok") {')
+        output('        Swal.fire(')
+        output('            "Success!",')
+        output('            "Please Wait for 30 Seconds to startup your computer.",')
+        output('            "success")')
+        output('     }')
+        output('     else {')
+        output('        Swal.fire({')
+        output('            icon: "error",')
+        output('            title: "Oops...",')
+        output('            text: "Something went wrong! Please contact your system administrator."')
+        output('            })')
+        output('     }')
         output('}')
         # When the user clicks on <span> (x), close the modal
-        output('span.onclick = function() {')
-        output('    modal.style.display = "none";')
-        output('}')
-        output('btn_ok.onclick = function() {')
-        output('    alertpopup.style.display = "none";')
-        output('}')
-        output('')
-        output('btn_cancel.onclick = function() {')
-        output('    modal.style.display = "none";')
-        output('}')
+        #output('span.onclick = function() {')
+        #output('    modal.style.display = "none";')
+        #output('}')
+        #output('btn_ok.onclick = function() {')
+        #output('    alertpopup.style.display = "none";')
+        #output('}')
+        #output('')
+        #output('btn_cancel.onclick = function() {')
+        #output('    modal.style.display = "none";')
+        #output('}')
         # When the user clicks anywhere outside of the modal, close it
         output('window.onclick = function(event) {')
         output('    if (event.target == modal) {')
@@ -1073,9 +1096,13 @@ def perform_wol(mac):
         global_config = ConfigLoader(args.config)
     toolPath = global_config.settings.get('woltoolpath')
     ipBroadcast = global_config.settings.get('ipbroadcast')
-    test = subprocess.run([toolPath,"-M",mac,"-IB",ipBroadcast], capture_output=True)
-    out_command = '{0!s}'.format(test.stdout)
-    return out_command
+    command = [toolPath,"-M",mac,"-IB",ipBroadcast]
+    sp = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True,)
+    status = sp.wait()
+    out, err = sp.communicate()
+    if status == 0:
+     return "Ok"
+    return "Failed"
 
 def get_args():
     parser = argparse.ArgumentParser(

@@ -116,6 +116,10 @@
   text-decoration: none;
   cursor: pointer;
 }
+.swal2-popup {
+  font-size: 1.6rem !important;
+}
+
 ul {
 	margin: 0;
 	padding: 0;
