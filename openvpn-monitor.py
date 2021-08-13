@@ -845,7 +845,7 @@ class OpenvpnHtmlPrinter(object):
                 output('</tr>')
 
     def print_wol_header(self):
-        computers_header = ['Username', 'Computer Name', 'IP Address', 'MAC Address', 'Action']#, 'Status', 'Check Status']
+        computers_header = ['Username', 'Computer Name', 'IP Address', 'MAC Address', 'Status','Action']#, 'Check Status']
 
         output('<div class="table-responsive">')
         output('<table id="sessions" class="table table-striped table-bordered ')
@@ -862,13 +862,19 @@ class OpenvpnHtmlPrinter(object):
         output('<td>{0!s}</td>'.format(computers['ComputerName']))
         output('<td>{0!s}</td>'.format(computers['IPAddress']))
         output('<td>{0!s}</td>'.format(computers['MacAddress']))
-
+        #Status
+        output('<td id="text-status-{0!s}">{1!s}</td>'.format(computers['ID'], 'Unknown'))
         #Wake button
         output('<td>')
-        output('<button type="submit" class="btn btn-xs btn-success" id="{0!s}">'.format(computers['ID']))
-        output('<input type="hidden" id="input-{0!s}" value="{1!s}">'.format(computers['ID'],computers['MacAddress']))
+        output('<button type="submit" class="btn btn-xs btn-success" id="btn-wol-{0!s}">'.format(computers['ID']))
+        output('<input type="hidden" id="input-wol-{0!s}" value="{1!s}">'.format(computers['ID'],computers['MacAddress']))
         output('<span class="glyphicon glyphicon-off"></span>')
         output('Wake This PC</button>')
+        #Ping button
+        output('<button type="submit" class="btn btn-xs btn-warning" id="btn-ping-{0!s}">'.format(computers['ID']))
+        output('<input type="hidden" id="input-ping-{0!s}" value="{1!s}">'.format(computers['ID'],computers['IPAddress']))
+        output('<span class="glyphicon glyphicon-repeat"></span>')
+        output('Re-check Status</button>')
         output('</td>')
         output('</tr>')
 
@@ -951,15 +957,20 @@ class OpenvpnHtmlPrinter(object):
         output('<script>')
         output('')
         for i in self.woldata:
-            # Get the button that opens the modal
-            output('var btn_{0!s} = document.getElementById("{1!s}");'.format(i['ID'],i['ID']))
+            output('var btn_wol_{0!s} = document.getElementById("btn-wol-{0!s}");'.format(i['ID']))
+        for i in self.woldata:
+            output('var btn_ping_{0!s} = document.getElementById("btn-ping-{0!s}");'.format(i['ID']))
+        #for i in self.woldata:
+        #    output('var text_status_{0!s} = document.getElementById("text-status-{0!s}");'.format(i['ID']))
+
         output('var xhttp = new XMLHttpRequest();')
         output('')
+        # wake button onClick
         for i in self.woldata:
             # When the user clicks on the button, open the modal 
-            output('btn_{0!s}.onclick = function()'.format(i['ID']))
+            output('btn_wol_{0!s}.onclick = function()'.format(i['ID']))
             output('{')
-            output('var macaddress = document.getElementById("input-{0!s}").value;'.format(i['ID']))
+            output('var macaddress = document.getElementById("input-wol-{0!s}").value;'.format(i['ID']))
             output('Swal.fire({')
             output('  title: "Are you sure?",')
             output('  text: "Are you sure want to wake up computer {0!s}!",'.format(i['ComputerName']))
@@ -972,23 +983,64 @@ class OpenvpnHtmlPrinter(object):
             output('  if (result.isConfirmed) {')
             output('    xhttp.open("POST","/",true);')
             output('    var requestdata = "action=wol&&mac-address=" + macaddress;')
+            output('    requestdata += "&&ID={0!s}";'.format(i["ID"]))
             output('    xhttp.send(requestdata);')
             output('    console.log(requestdata);')
             output('  }')
             output('})')
             output('}')
+        # ping button onClick
+        for i in self.woldata:
+            # When the user clicks on the button, open the modal 
+            output('btn_ping_{0!s}.onclick = function()'.format(i['ID']))
+            output('{')
+            output('    var ipaddress = document.getElementById("input-ping-{0!s}").value;'.format(i['ID']))
+            output('    xhttp.open("POST","/",true);')
+            output('    var requestdata = "action=ping&&Ip-address=" + ipaddress;')
+            output('    requestdata += "&&ID={0!s}";'.format(i["ID"]))
+            output('    xhttp.send(requestdata);')
+            output('    var text_status = document.getElementById("text-status-{0!s}");'.format(i['ID']))
+            output('    text_status.innerHTML = "Checking...";')
+            output('    text_status.style.color = "black";')
+            output('    console.log(requestdata);')
+            output('}')
 
         output('')
         output('xhttp.onload = function()')
         output('{')
-        output('    const wakeresponse = this.responseText;')
-        output('    const jsonresponse = JSON.parse(wakeresponse)')
-        output('    console.log(wakeresponse);')
-        output('    if (jsonresponse["ExitCode"] == 0) {')
-        output('        Swal.fire(')
-        output('            "Success!",')
-        output('            "Please Wait for 30 Seconds to startup your computer.",')
-        output('            "success")')
+        output('    const status = this.status;')
+        output('    console.log("Status: " + status);')
+        output('    if (status == 200) {')
+        output('        const wakeresponse = this.responseText;')
+        output('        console.log(wakeresponse);')
+        output('        const jsonresponse = JSON.parse(wakeresponse)')
+        output('        if (jsonresponse["Action"] == "Wol") {')
+        output('            if (jsonresponse["ExitCode"] == 0) {')
+        output('                Swal.fire(')
+        output('                    "Success!",')
+        output('                    "Please Wait for 30 Seconds to startup your computer.",')
+        output('                    "success")')
+        output('            }')
+        output('            else {')
+        output('                Swal.fire({')
+        output('                    icon: "error",')
+        output('                    title: "Oops...",')
+        output('                    text: "Something went wrong! Please contact your system administrator."')
+        output('                })')
+        output('            }')
+        output('         }')
+        output('         else if (jsonresponse["Action"] == "Ping") {')
+        output('             const id = jsonresponse["ID"];')
+        output('             var text_status = document.getElementById("text-status-" + id);')
+        output('             if (jsonresponse["ExitCode"] == 0) {')
+        output('                 text_status.innerHTML = "ONLINE";')
+        output('                 text_status.style.color = "green";')
+        output('             }')
+        output('             else {')
+        output('                 text_status.innerHTML = "OFFLINE";')
+        output('                 text_status.style.color = "red";')
+        output('             }')
+        output('         }')
         output('     }')
         output('     else {')
         output('        Swal.fire({')
@@ -1025,26 +1077,28 @@ def main(**kwargs):
         pretty_vpns = pformat((dict(monitor.vpns)))
         debug("=== begin vpns\n{0!s}\n=== end vpns".format(pretty_vpns))
 
-def perform_ping(ip):
-    #ResponseList = ping(ip,count=1)
-    #ResponseList.success
-    #if ResponseList.success:
-    #    info('perform ping {0!s} {1!s}'.format(ip,'Success'))
-    #else:
-    info('Ping Failed: {0!s}'.format(ip))
+def perform_ping(ip,id):
+    command = ["ping","-c","1","-n","-W","2",ip]
+    sp = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    status = sp.wait()
+    out, err = sp.communicate()
+    json_response = {"Action": "Ping","ID": id,"ExitCode": status, "OutPut": out}
+    #json_response = {"ExitCode": 0, "OutPut": ip}
+    json_dump = json.dumps(json_response)
+    json_object = json.loads(json_dump)
+    return json_object
 
-
-def perform_wol(mac):
+def perform_wol(mac,id):
     global global_config
     if global_config is None:
         global_config = ConfigLoader(args.config)
     toolPath = global_config.settings.get('woltoolpath')
     ipBroadcast = global_config.settings.get('ipbroadcast')
     command = [toolPath,"-M",mac,"-IB",ipBroadcast]
-    sp = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True,)
+    sp = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
     status = sp.wait()
     out, err = sp.communicate()
-    json_response = {"ExitCode": status, "OutPut": out}
+    json_response = {"Action": "Wol","ID": id,"ExitCode": status, "OutPut": out}
     json_dump = json.dumps(json_response)
     json_object = json.loads(json_dump)
     return json_object
@@ -1109,20 +1163,17 @@ def monitor_wsgi():
         ip = request.forms.get('ip')
         port = request.forms.get('port')
         client_id = request.forms.get('client_id')
-        ip = request.forms.get('Ip-address')
+        ip_ping = request.forms.get('Ip-address')
         mac_address = request.forms.get('mac-address')
+        id = request.forms.get('ID')
         action = request.forms.get('action')
 
-        if (action == 'ping'):
-            debug("Ping command")
-        elif (action == 'wol'):
-            debug("WOL command")
         if (action == 'disconnect'):
             return render(vpn_id=vpn_id, ip=ip, port=port, client_id=client_id)
         elif (action == 'ping'):
-            perform_ping(ip)    
+            return perform_ping(ip_ping,id)    
         elif (action == 'wol'):
-            return perform_wol(mac_address)
+            return perform_wol(mac_address,id)
         #return render()
 
     @app.route('/<filename:re:.*\.(jpg|png)>', method='GET')
