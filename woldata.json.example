@@ -1,13 +1,15 @@
 [
     {
-        "UserName": "demo1",
-        "ComputerName": "demo1",
+        "ID": "ID001",
+        "UserName": "User01",
+        "ComputerName": "computer01",
         "IPAddress": "192.168.1.10",
         "MacAddress": "FC-12-13-92-64-15"
     },
     {
-        "UserName": "demo2",
-        "ComputerName": "demo2",
+        "ID": "ID002",
+        "UserName": "User02",
+        "ComputerName": "computer02",
         "IPAddress": "192.168.1.11",
         "MacAddress": "7C-4B-48-39-DD-65"
     }

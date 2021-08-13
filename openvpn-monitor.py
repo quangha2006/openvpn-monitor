@@ -197,18 +197,20 @@ class OpenvpnMgmtInterface(object):
 
         if kwargs.get('vpn_id'):
             vpn = self.vpns[kwargs['vpn_id']]
-            self._socket_connect(vpn)
-            if vpn['socket_connected']:
-                release = self.send_command('version\n')
-                version = semver(self.parse_version(release).split(' ')[1])
-                if version.major == 2 and \
-                        version.minor >= 4 and \
-                        kwargs.get('client_id'):
-                    command = 'client-kill {0!s}\n'.format(kwargs['client_id'])
-                else:
-                    command = 'kill {0!s}:{1!s}\n'.format(kwargs['ip'], kwargs['port'])
-                self.send_command(command)
-                self._socket_disconnect()
+            disconnection_allowed = vpn['show_disconnect']
+            if disconnection_allowed:
+                self._socket_connect(vpn)
+                if vpn['socket_connected']:
+                    release = self.send_command('version\n')
+                    version = semver(self.parse_version(release).split(' ')[1])
+                    if version.major == 2 and \
+                            version.minor >= 4 and \
+                            kwargs.get('client_id'):
+                        command = 'client-kill {0!s}\n'.format(kwargs['client_id'])
+                    else:
+                        command = 'kill {0!s}:{1!s}\n'.format(kwargs['ip'], kwargs['port'])
+                    self.send_command(command)
+                    self._socket_disconnect()
 
         geoip_data = cfg.settings['geoip_data']
         self.geoip_version = None
@@ -863,8 +865,8 @@ class OpenvpnHtmlPrinter(object):
 
         #Wake button
         output('<td>')
-        output('<button type="submit" class="btn btn-xs btn-success" id="{0!s}">'.format(computers['UserName']))
-        output('<input type="hidden" id="input-{0!s}" value="{1!s}">'.format(computers['UserName'],computers['MacAddress']))
+        output('<button type="submit" class="btn btn-xs btn-success" id="{0!s}">'.format(computers['ID']))
+        output('<input type="hidden" id="input-{0!s}" value="{1!s}">'.format(computers['ID'],computers['MacAddress']))
         output('<span class="glyphicon glyphicon-off"></span>')
         output('Wake This PC</button>')
         output('</td>')
@@ -945,53 +947,19 @@ class OpenvpnHtmlPrinter(object):
         output('</div>')
         output('</div>')
 
-    #def print_html_modal(self):
-        # <!-- The Modal -->
-    #    output('<div id="myModal" class="cd-popup" role="alert">')
-    #    output('    <div class="cd-popup-content">')
-    #    output('        <span class="close">&times;</span>')
-    #    output('        <p>Are you sure want to wake up the computer! </p>')
-    #    output('        <ul class="cd-buttons">')
-    #    output('            <button id="btnconfirm">Yes</button>')
-    #    output('            <button id="btncancel">No</button>')
-    #    output('        </ul>')
-    #    output('        <input type="hidden" id="btnconfirm-data" value=""> ')
-    #    output('    </div>')
-    #    output('</div>')
-    #    output('')
-        # <!-- The alertpopup -->
-    #    output('<div id="alertpopup" class="cd-popup" role="alert">')
-    #    output('    <div class="cd-popup-content">')
-    #    output('        <p id="response_text">Response Text Here! </p>')
-    #    output('        <ul class="cd-buttons-single">')
-    #    output('            <button id="btn_ok">Ok</button>')
-    #    output('        </ul>')
-    #    output('    </div>')
-    #    output('</div>')
-    #    output('')
-
     def print_script(self):
         output('<script>')
-        #Get the modal
-        output('var modal = document.getElementById("myModal");')
-        output('var alertpopup = document.getElementById("alertpopup");')
+        output('')
         for i in self.woldata:
             # Get the button that opens the modal
-            output('var btn_{0!s} = document.getElementById("{1!s}");'.format(i['UserName'],i['UserName']))
-
-
-        output('var btn_cancel =  document.getElementById("btncancel");')
-        output('var btn_ok =  document.getElementById("btn_ok");')
-        # Get the <span> element that closes the modal
-        output('var span = document.getElementsByClassName("close")[0];')
-        output('var btn_confirm =  document.getElementById("btnconfirm");')
+            output('var btn_{0!s} = document.getElementById("{1!s}");'.format(i['ID'],i['ID']))
         output('var xhttp = new XMLHttpRequest();')
         output('')
         for i in self.woldata:
             # When the user clicks on the button, open the modal 
-            output('btn_{0!s}.onclick = function()'.format(i['UserName']))
+            output('btn_{0!s}.onclick = function()'.format(i['ID']))
             output('{')
-            output('var macaddress = document.getElementById("input-{0!s}").value;'.format(i['UserName']))
+            output('var macaddress = document.getElementById("input-{0!s}").value;'.format(i['ID']))
             output('Swal.fire({')
             output('  title: "Are you sure?",')
             output('  text: "Are you sure want to wake up computer {0!s}!",'.format(i['ComputerName']))
@@ -1011,15 +979,6 @@ class OpenvpnHtmlPrinter(object):
             output('}')
 
         output('')
-        #output('btn_confirm.onclick = function()')
-        #output('{')
-        #output('    modal.style.display = "none";')
-        #output('    var macaddress = document.getElementById("btnconfirm-data").value;')
-        #output('    xhttp.open("POST","/",true);')
-        #output('    var requestdata = "action=wol&&mac-address=" + macaddress;')
-        #output('    xhttp.send(requestdata);')
-        #output('    console.log(requestdata);')
-        #output('}')
         output('xhttp.onload = function()')
         output('{')
         output('    const wakeresponse = this.responseText;')
@@ -1039,23 +998,7 @@ class OpenvpnHtmlPrinter(object):
         output('            })')
         output('     }')
         output('}')
-        # When the user clicks on <span> (x), close the modal
-        #output('span.onclick = function() {')
-        #output('    modal.style.display = "none";')
-        #output('}')
-        #output('btn_ok.onclick = function() {')
-        #output('    alertpopup.style.display = "none";')
-        #output('}')
-        #output('')
-        #output('btn_cancel.onclick = function() {')
-        #output('    modal.style.display = "none";')
-        #output('}')
-        # When the user clicks anywhere outside of the modal, close it
-        output('window.onclick = function(event) {')
-        output('    if (event.target == modal) {')
-        output('        modal.style.display = "none";')
-        output('    }')
-        output('} ')
+        output('')
         output('</script>')
 
     def print_html_footer(self, vpn):

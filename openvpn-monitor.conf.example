@@ -11,7 +11,7 @@ wakeonlan=True
 woldatapath=woldata.json
 woltoolpath=/home/username/Downloads/WOLLinux
 ipbroadcast=192.168.0.255
-printlog=True
+printlog=False
 datetime_format=%d/%m/%Y %H:%M:%S
 
 [VPN1]
