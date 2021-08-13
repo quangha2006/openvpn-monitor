@@ -960,14 +960,10 @@ class OpenvpnHtmlPrinter(object):
             output('var btn_wol_{0!s} = document.getElementById("btn-wol-{0!s}");'.format(i['ID']))
         for i in self.woldata:
             output('var btn_ping_{0!s} = document.getElementById("btn-ping-{0!s}");'.format(i['ID']))
-        #for i in self.woldata:
-        #    output('var text_status_{0!s} = document.getElementById("text-status-{0!s}");'.format(i['ID']))
 
-        #output('var xhttp = new XMLHttpRequest();')
         output('')
         # wake button onClick
         for i in self.woldata:
-            # When the user clicks on the button, open the modal 
             output('btn_wol_{0!s}.onclick = function()'.format(i['ID']))
             output('{')
             output('    var macaddress = document.getElementById("input-wol-{0!s}").value;'.format(i['ID']))
@@ -977,7 +973,6 @@ class OpenvpnHtmlPrinter(object):
             output('}')
         # ping button onClick
         for i in self.woldata:
-            # When the user clicks on the button, open the modal 
             output('btn_ping_{0!s}.onclick = function()'.format(i['ID']))
             output('{')
             output('    var ipaddress = document.getElementById("input-ping-{0!s}").value;'.format(i['ID']))
@@ -987,7 +982,6 @@ class OpenvpnHtmlPrinter(object):
         output('')
         output('function ParseResponse(status,responseText)')
         output('{')
-        #output('    const status = this.status;')
         output('    console.log("Status: " + status);')
         output('    if (status == 200) {')
         output('        const wakeresponse = responseText;')
