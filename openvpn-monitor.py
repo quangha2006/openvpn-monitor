@@ -1167,10 +1167,12 @@ def monitor_wsgi():
         image_dir = owd + '/../../../share/openvpn-monitor/'
         css_dir = 'CSS'
         js_dir = 'JS'
+        fonts_dir = 'fonts'
     else:
         image_dir = ''
         css_dir = 'CSS'
         js_dir = 'JS'
+        fonts_dir = 'fonts'
     
     app = Bottle()
 
@@ -1227,6 +1229,9 @@ def monitor_wsgi():
     def get_js(filename):
         return static_file(filename, js_dir)
 
+    @app.route('/fonts/<filename:re:.*\.(ttf|woff|woff2)>', method='GET')
+    def get_fonts(filename):
+        return static_file(filename, fonts_dir)
     return app
 
 
