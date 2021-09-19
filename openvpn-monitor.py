@@ -1165,8 +1165,12 @@ def monitor_wsgi():
     if owd.endswith('site-packages') and sys.prefix != '/usr':
         # virtualenv
         image_dir = owd + '/../../../share/openvpn-monitor/'
+        css_dir = 'CSS'
+        js_dir = 'JS'
     else:
         image_dir = ''
+        css_dir = 'CSS'
+        js_dir = 'JS'
     
     app = Bottle()
 
@@ -1214,6 +1218,14 @@ def monitor_wsgi():
     @app.route('/<filename:re:.*\.(jpg|png)>', method='GET')
     def get_images(filename):
         return static_file(filename, image_dir)
+
+    @app.route('/CSS/<filename:re:.*\.css>', method='GET')
+    def get_css(filename):
+        return static_file(filename, css_dir)
+
+    @app.route('/CSS/<filename:re:.*\.js>', method='GET')
+    def get_js(filename):
+        return static_file(filename, js_dir)
 
     return app
 
