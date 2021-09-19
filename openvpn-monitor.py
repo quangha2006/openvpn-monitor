@@ -588,23 +588,23 @@ class OpenvpnHtmlPrinter(object):
         output('<meta http-equiv="refresh" content="300" />')
 
         # css
-        output('<link rel="stylesheet" href="CSS/bootstrap.min.css" />')  # noqa
-        output('<link rel="stylesheet" href="CSS/bootstrap-theme.min.css" />')  # noqa
-        output('<link rel="stylesheet" href="CSS/theme.bootstrap_3.min.css" />')  # noqa
+        output('<link rel="stylesheet" href="css/bootstrap.min.css" />')  # noqa
+        output('<link rel="stylesheet" href="css/bootstrap-theme.min.css" />')  # noqa
+        output('<link rel="stylesheet" href="css/theme.bootstrap_3.min.css" />')  # noqa
         if self.location:
-            output('<link rel="stylesheet" href="CSS/leaflet.min.css" />')  # noqa
-            output('<link rel="stylesheet" href="CSS/Control.FullScreen.min.css" />')  # noqa
+            output('<link rel="stylesheet" href="css/leaflet.min.css" />')  # noqa
+            output('<link rel="stylesheet" href="css/Control.FullScreen.min.css" />')  # noqa
         output('<style>')
         output('{0!s}'.format(self.css))
         output('</style>')
 
         # js
-        output('<script src="JS/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>')  # noqa
-        output('<script src="JS/jquery.tablesorter.min.js" integrity="sha512-qzgd5cYSZcosqpzpn7zF2ZId8f/8CHmFKZ8j7mU4OUXTNRd5g+ZHBPsgKEwoqxCtdQvExE5LprwwPAgoicguNg==" crossorigin="anonymous"></script>')  # noqa
-        output('<script src="JS/jquery.tablesorter.widgets.min.js" integrity="sha512-dj/9K5GRIEZu+Igm9tC16XPOTz0RdPk9FGxfZxShWf65JJNU2TjbElGjuOo3EhwAJRPhJxwEJ5b+/Ouo+VqZdQ==" crossorigin="anonymous"></script>')  # noqa
-        output('<script src="JS/parser-network.min.js" integrity="sha512-13ZRU2LDOsGjGgqBkQPKQ/JwT/SfWhtAeFNEbB0dFG/Uf/D1OJPbTpeK2AedbDnTLYWCB6VhTwLxlD0ws6EqCw==" crossorigin="anonymous"></script>')  # noqa
-        output('<script src="JS/parser-duration.min.js" integrity="sha512-X7QJLLEO6yg8gSlmgRAP7Ec2qDD+ndnFcd8yagZkkN5b/7bCMbhRQdyJ4SjENUEr+4eBzgwvaFH5yR/bLJZJQA==" crossorigin="anonymous"></script>')  # noqa
-        output('<script src="JS/bootstrap.min.js" integrity="sha512-oBTprMeNEKCnqfuqKd6sbvFzmFQtlXS3e0C/RGFV0hD6QzhHV+ODfaQbAlmY6/q0ubbwlAM/nCJjkrgA3waLzg==" crossorigin="anonymous"></script>')  # noqa
+        output('<script src="js/jquery.min.js" ></script>')  # noqa
+        output('<script src="js/jquery.tablesorter.min.js" ></script>')  # noqa
+        output('<script src="js/jquery.tablesorter.widgets.min.js" ></script>')  # noqa
+        output('<script src="js/parser-network.min.js" ></script>')  # noqa
+        output('<script src="js/parser-duration.min.js" ></script>')  # noqa
+        output('<script src="js/bootstrap.min.js" ></script>')  # noqa
         output('<script>$(document).ready(function(){')
         output('$("table.tablesorter").tablesorter({')
         output('sortList: [[0,0]], theme:"bootstrap", headerTemplate:"{content} {icon}", widgets:["uitheme"],')
@@ -612,14 +612,14 @@ class OpenvpnHtmlPrinter(object):
         output('});')
         output('});</script>')
         if self.location:
-            output('<script src="JS/leaflet.min.js" integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA==" crossorigin="anonymous"></script>')  # noqa
-            output('<script src="JS/oms.min.js" integrity="sha512-V8RRDnS4BZXrat3GIpnWx+XNYBHQGdK6nKOzMpX4R0hz9SPWt7fltGmmyGzUkVFZUQODO1rE+SWYJJkw3SYMhg==" crossorigin="anonymous"></script>')  # noqa
-            output('<script src="JS/Control.FullScreen.min.js" integrity="sha512-c6ydt5Rypa1ptlnH2U1u+JybARYppbD1qxgythCI4pJ9EOfNYEWlLBjxBX926O3tq5p4Aw5GTY68vT0FdKbG3w==" crossorigin="anonymous"></script>')  # noqa
+            output('<script src="js/leaflet.min.js" ></script>')  # noqa
+            output('<script src="js/oms.min.js" ></script>')  # noqa
+            output('<script src="js/Control.FullScreen.min.js" ></script>')  # noqa
 
         output('')
         #sweetalert2
         #output('<script src="JS/sweetalert2@11"></script>')
-        output('<script src="JS/sweetalert2.all.min.js"></script>')
+        output('<script src="js/sweetalert2.all.min.js"></script>')
         #output('<script src="//cdn.jsdelivr.net/npm/sweetalert2@11.1.2/dist/sweetalert2.min.js"></script>')
         #output('<link rel="stylesheet" href="cdn.jsdelivr.net/npm/sweetalert2@11.1.2/dist/sweetalert2.min.css">')
         output('')
@@ -1219,11 +1219,11 @@ def monitor_wsgi():
     def get_images(filename):
         return static_file(filename, image_dir)
 
-    @app.route('/CSS/<filename:re:.*\.css>', method='GET')
+    @app.route('/css/<filename:re:.*\.css>', method='GET')
     def get_css(filename):
         return static_file(filename, css_dir)
 
-    @app.route('/CSS/<filename:re:.*\.js>', method='GET')
+    @app.route('/js/<filename:re:.*\.js>', method='GET')
     def get_js(filename):
         return static_file(filename, js_dir)
 
