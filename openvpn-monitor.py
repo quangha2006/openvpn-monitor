@@ -1221,7 +1221,7 @@ def monitor_wsgi():
     def get_images(filename):
         return static_file(filename, image_dir)
 
-    @app.route('/css/<filename:re:.*\.css>', method='GET')
+    @app.route('/css/<filename:re:.*\.(css|map)>', method='GET')
     def get_css(filename):
         return static_file(filename, css_dir)
 
