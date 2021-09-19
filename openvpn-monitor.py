@@ -594,10 +594,10 @@ class OpenvpnHtmlPrinter(object):
         if self.location:
             output('<link rel="stylesheet" href="css/leaflet.min.css" />')  # noqa
             output('<link rel="stylesheet" href="css/Control.FullScreen.min.css" />')  # noqa
-        output('<style>')
-        output('{0!s}'.format(self.css))
-        output('</style>')
-
+        #output('<style>')
+        #output('{0!s}'.format(self.css))
+        #output('</style>')
+        output('<link rel="stylesheet" href="css/style.css" />')
         # js
         output('<script src="js/jquery.min.js" ></script>')  # noqa
         output('<script src="js/jquery.tablesorter.min.js" ></script>')  # noqa
