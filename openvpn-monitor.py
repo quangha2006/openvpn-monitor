@@ -594,10 +594,8 @@ class OpenvpnHtmlPrinter(object):
         if self.location:
             output('<link rel="stylesheet" href="css/leaflet.min.css" />')  # noqa
             output('<link rel="stylesheet" href="css/Control.FullScreen.min.css" />')  # noqa
-        #output('<style>')
-        #output('{0!s}'.format(self.css))
-        #output('</style>')
         output('<link rel="stylesheet" href="css/style.css" />')
+
         # js
         output('<script src="js/jquery.min.js" ></script>')  # noqa
         output('<script src="js/jquery.tablesorter.min.js" ></script>')  # noqa
@@ -982,10 +980,8 @@ class OpenvpnHtmlPrinter(object):
         output('')
         output('function ParseResponse(status,responseText)')
         output('{')
-        output('    console.log("Status: " + status);')
         output('    if (status == 200) {')
         output('        const wakeresponse = responseText;')
-        output('        console.log(wakeresponse);')
         output('        const jsonresponse = JSON.parse(wakeresponse)')
         output('        if (jsonresponse["Action"] == "Wol") {')
         output('            if (jsonresponse["ExitCode"] == 0) {')
@@ -1036,7 +1032,6 @@ class OpenvpnHtmlPrinter(object):
         output('    var text_status = document.getElementById("text-status-" + id);')
         output('    text_status.innerHTML = "Checking...";')
         output('    text_status.style.color = "black";')
-        output('    console.log(requestdata);')
         output(' }')
         output('')
         output('function WolCommand(macaddress,computername,id) {')
@@ -1058,7 +1053,6 @@ class OpenvpnHtmlPrinter(object):
         output('            ParseResponse(this.status, this.responseText);')
         output('        }')
         output('        xhttp.send(requestdata);')
-        output('        console.log(requestdata);')
         output('      }')
         output('    })')
         output(' }')
@@ -1069,7 +1063,7 @@ class OpenvpnHtmlPrinter(object):
         output('}')
         output('')
         output('async function autocheckstatus() {')
-        output('    console.log("OnLoad");')
+        output('')
         ipArray = []
         idArray = []
         for i in self.woldata:
@@ -1118,7 +1112,6 @@ def perform_ping(ip,id):
     status = sp.wait()
     out, err = sp.communicate()
     json_response = {"Action": "Ping","ID": id,"ExitCode": status, "OutPut": out}
-    #json_response = {"ExitCode": 0, "OutPut": ip}
     json_dump = json.dumps(json_response)
     json_object = json.loads(json_dump)
     return json_object
